@@ -1,0 +1,3455 @@
+#!/bin/bash
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Copyright 2025 Marcelo Marino
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+# Script  : gamepad_config_manager.sh                   #
+# Function: Swiss army knife to manage gamepad configs  #
+# Lines   : 3455                                        #
+#            - 'CONFIGS' starts on line 32              #
+#            - 'PRIMARY FUNCTIONS' at 766               #
+#            - 'SECONDARY FUNCTIONS' at 2712            #
+#            - 'SCRIPT' at 3431                         #
+# Author  : Marcelo Marino - 'mail.moniram@gmail.com'   #
+# Date    : 2025/12/25 v1.0                             #
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+clear
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+#                                 Configuration files start here.                           #
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# Folders and Temp Files
+
+# MiSTer Folders
+MISTER_ROOT=/media/fat
+INPUTS=/media/fat/config/inputs/gcm
+INPUT_MISTER=/media/fat/config/inputs
+CORES_COMPUTER=/media/fat/_Computer
+CORES_CONSOLE=/media/fat/_Console
+CORES_OTHER=/media/fat/_Other
+CORES_UNSTABLE=/media/fat/_Unstable
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# List of 'Core Profiles'
+menu_file="$INPUTS"/tmp/menu.txt
+# Temporary file used by dynamically generated Menus
+tmp_file_menu="$INPUTS"/tmp/menu.temp
+# Temporary file with dynamically generated lists
+tmp_message="$INPUTS"/tmp/message.temp
+# Temporary file to sort lists alphabetically
+tmp_order="$INPUTS"/tmp/order.temp
+# Temporary IDs of GAMEPADS
+tmp_IDs="$INPUTS"/tmp/ids.temp
+# Temporary file used for editing lists
+tmp_dialog="$INPUTS"/tmp/dialog.temp
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# Test $INPUTS
+if [ ! -d "$INPUTS" ]; then
+    first_run=1
+fi
+
+if [ ! -d "$INPUTS"/configs ]; then
+    mkdir -p "$INPUTS"/configs 2>/dev/null
+fi
+
+if [ ! -d "$INPUTS"/tmp ]; then
+    mkdir -p "$INPUTS"/tmp 2>/dev/null
+fi
+
+if [ ! -d "$INPUTS"/data ]; then
+    mkdir -p "$INPUTS"/data 2>/dev/null
+fi
+
+if [ ! -f "$INPUTS"/configs/gcm.cfg ]; then
+    cat << EOF >> "$INPUTS"/configs/gcm.cfg
+dialogrc_color-scheme=BLUE
+language=en
+tips=1
+help_tips=1
+EOF
+fi
+
+# Flag that enables help tips next to the menus
+tips_flag=$(grep -o '^[[:space:]]*tips=[^[:space:]]*' "$INPUTS"/configs/gcm.cfg | cut -d'=' -f2 2>/dev/null)
+# Flag that enables HELP menu hint
+help_flag=$(grep -o '^[[:space:]]*help_tips=[^[:space:]]*' "$INPUTS"/configs/gcm.cfg | cut -d'=' -f2 2>/dev/null)
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+ # Update the visual settings of the dialog
+definitionsDIALOGRC(){
+    # DIALOG DEFINITIONS - base64
+    DIALOGRC_CONFIG_BLUE="UEsDBBQAAAAIAGJgN1tsewVUcAMAAFQLAAAIABwARElBTE9HUkNVVAkAA6i20mh+t9JodXgLAAEE
+6AMAAAToAwAAnVbbbtswDH33Vwjpywo4wZDHYRekW4MVyxJgSzHsKZBtxhaqSIYuzQLs40dJdiw7
+lxYL0MS8HB5SosneJDfkhxVjw3ZAcim2rLSKGiYF2TIOZCsVKRjlskxu0HVmjdyhOaecH0gJAtAZ
+CpIdyCi4kfE4V4DKscrJexfj48hBEbw+1KCJ3JJnyi3od165tLsMFHGfMSHvhRc/ouGnUUyUrWGk
+vYihyJ2UHKhoEavl39V87hAzgz6ZNeANbzB1KJW0okgzmj81jxUrK45/5tNt4ljAEKpryM04lD1J
+gkg+kLetg4aaohWPwgUlO8sNq/Fw9qwowWBJ1tTW3E6SxhE2wYIxRqM2iKHZmIMoTRWiGPhjMvnH
+6/Hgn0FppMcgqNigY5vAd/oE3sko6pwo95eSV5A/caZNSsDkk5QwkXNboGsFxOknyTPTzGyYgZ3G
+YHhIPpWKFnLf3CnBBEB/IuuKaUK5lsRYJbAggb3ApZokVsNGB8gxxBp9gp1oW9dSGbJaEpSc3QG8
+zXMuPSU2BDSIRHshuKDHm19fH9b36Zf7+exxsU5Xy9soyQbhhQ7R+t4tZp+/pcjpIV+OBTWwUOGQ
+6G7xeJ/K7XaIMcxwaJD++RTo2ZZDYCZVgf0bkEHooJ7NfzXAWW7YMxBsUiNFEn421CuvEj4IGiNb
+uoBn4lIER9ycT4+ZPMGhHwMVJ3n8vl8sVr+uJ3I20H8kxGkGvB/Jq4ZJXUj3XGoXQ74qvQeBr3TU
+TszJKL4S1GuLI3bQH3GLhjFBVV5FpNorXmKNYHEbd+B+Q0fSAN1LuoMPso5FF2Du9kQtcda4rcFE
+gdvBzcrg0Bo2R8OlRL6DsFHtOxTjyoeHdXTvZd2iXsj5AYdiezn42B3vvkI5zXA/HafET+C4D3DJ
+sQFIN4YOfQDO5R7huG9SHOZ+WtKynSu0G0cda4/C9JxPCM7QthTdi+iQ7v0Y1NSbfD3CU+jrKvvs
+VlB0Y34lXWnuhjI/CzuhPDMcXZjHmlCljsvBeuH6sJZ70cMUfUwc4tgbFfB67FZ0dOFON5jtgW4w
+0nA970iEdXJbh1O/VOL8HL4HjMnbK/0BuCYF/lfm6aNe9XDfOapxee1uK6kt22ninztgaITee3Ky
+FKe9rTi9Ch5Ozun50Xk9yMkom16YZdfDDCbL9OxouRLiH1BLAQIeAxQAAAAIAGJgN1tsewVUcAMA
+AFQLAAAIABgAAAAAAAEAAAC0gQAAAABESUFMT0dSQ1VUBQADqLbSaHV4CwABBOgDAAAE6AMAAFBL
+BQYAAAAAAQABAE4AAACyAwAAAAA="
+
+    DIALOGRC_CONFIG_YELLOW="UEsDBBQAAAAIAAehN1uVdGnqagMAAHYLAAAIABwARElBTE9HUkNVVAkAA10o02iqK9NodXgLAAEE
+6AMAAAToAwAAnVbbitswEH33VwzZly44oeSx9ELabujSbQJtSulTkO2JLVaRjCRvGujHdyTL8SXe
+ZGkgxKOZc85IGs/kJrqB75WcWr5HSJXc8bzSzHIlYccFwk5pyDgTKo9uKHRRWbUnd8qEOEKOEikY
+M0iOMKnDYDpNNdLiVKfw1nG8nzgogTfHEg2oHTwxUaF54xdX1T5BDe4zBXgrvfmeHD+s5jJvHBPj
+TaKCj0oJZLJBrFd/18ulQywsxSSVRe94RaljrlUlszhh6WN4LHheCPraD7eRU0ELzJSY2mm97VlU
+m/AOXjcBBktGXjoKRwr7Slhe0uEceJajpS1Vtqzs7SwKgbitPcQxmTQkliVTgTK3Rc1i8Y9N1B+/
+Tgf/hNqQPJHQwpYCmwS+sUf0QVYzF8SEv5S0wPRRcGNjQJvOYuAyFVVGoQWCW59FT9xwu+UW94bI
+6JB8KgXL1CHcKVACaD7ApuAGmDAKbKUlbUhSLQilZ1FlcGtqyIliQzG1H0xVlkpbWK+ALOd3AO/z
+misvSQWBAREZb9QhFPHq15f7zV38+W65+Pmwider206SAeGNFtHEfnxYfPoak6aHfD5tKMDqHbaw
+Q0EnEf++e3hY/4rVbjdEWW4FBqx/HuYY9FZDYKJ0RhVcI2ujhQa98BPAi9TyJwQqVatkVP9smV+8
+KHovWRfZSNZ4LscZGulwTj1teMRjn4UWzjIJDBdTGSX6r5QES1D0ufzSMK1nEh5L7lnKFyZ4L+n1
+7pQWdzaZL4b1SuSEHtRKt2DrpsF0WnRkjV+4rtsBdou6hffLu2MN0L20W/gg767pCJZubpSKeo+b
+IlxmNC1c76wDGsf25HgukW8oq87u92R29z48rlN4L+sGdSXne2qSzfXQ47BrHFEIdTh1jR8oaELQ
+2OMDmAmOFh+QiaAJFFN79/2T5U2fYW2DanV7ErYXfCYwIttItK+kQ7r35HIv7Emeg1+2t09uLHVu
+zY+pCyUeJNNR2JnkSKt0ND9LYFqfBkbljcvtWx1kD5P1MV2KU30UKMqpG9udK3drZ52yFhy0Nxra
+e+ignd3sxC1f2+RyDN8D9uWba/2OND4l/VvzCXQq1hP4+tEh5KUTL2dV3nQV/3zlfTkblvPetJxf
+gQ/76Hy8kV6jOWts82c62zWiQaeZj7aaiyT/AFBLAQIeAxQAAAAIAAehN1uVdGnqagMAAHYLAAAI
+ABgAAAAAAAEAAAC0gQAAAABESUFMT0dSQ1VUBQADXSjTaHV4CwABBOgDAAAE6AMAAFBLBQYAAAAA
+AQABAE4AAACsAwAAAAA="
+
+    DIALOGRC_CONFIG_MAGENTA="UEsDBBQAAAAIAGKhN1v+l/b8cgMAAIcLAAAIABwARElBTE9HUkNVVAkAAwcp02jqK9NodXgLAAEE
+6AMAAAToAwAAnVbbjtowEH3PV1jsS1cKqOKx6kW0XdpVd0Fqqao+IScZEmuNHfmyFKkf37ET50YW
+UJEQGc+cc8b2ZIab6IZ8t2Jq2B5IKsWO5VZRw6QgO8aB7KQiGaNc5tENhi6skXt0p5TzI8lBAAZD
+RpIjmVRhZDpNFeDiVKXkreN4P3FQBG+OJWgid+SZcgv6jV9c2X0CirjPlJC3wpvv0fHDKCby4Jho
+byIV+SglByoCYr36u14uHWJhMCaxBrzjFaYOuZJWZHFC06f6sWB5wfFrPtxGTgUMobqE1Eyrbc+i
+yiTvyOsQoKGk6MWjcKRkb7lhJR7OgWU5GNySNaU1t7OoDoRt5UGOySSQGJpMOYjcFBWLgT8mkX/8
+Oh78MyiN8kiCC1sMDAk80ifwQUZRF0S5v5S0gPSJM21iAiadxYSJlNsMQwsgbn0WPTPNzJYZ2Gsk
+w0PyqRQ0k4f6TgkmAPoD2RRME8q1JMYqgRsSWAtcqllkNWx1BWkoNhhT+Ym2ZSmVIesVQcv5HcD7
+vObKS2JBQI2ItDeqEIx49evr/eYu/ny3XPx82MTr1W0nyRrhjRYRYj8+LD59i1HTQz43G6ph1Q5b
+2KHAk4gfF1/uVptFLHe7Icwww6EG++dhkrXgaghMpMqwhCtkZbTQIBh+a/giNewZCFarkSKqfrbU
+L56VvRe0iwyiFZ6JcYZGuz6rnjh5gmOfBhdOUvl99/Cw/nU+l1Gi/8uJ0wR4n8wvDfN6IeOx7F6k
+vDbDe4EveafAmLPRvB7XK5QGPqiYbt1WvYOqtOjoar9whXAH2a3tFt+v8o41QPfybuGDxLumI1i6
++VFK7EFumjCR4dRwPbQKCI5t43gpkUcQtrP9PZrdzQ/PqwnvZR1QF3K+x2YZ7gcfh91jT3HkGdp0
+jx/AcVTg/GMDnK4dLcEROJeHOOE4imLs876R0jz0G9p2qla4J2F6wScCI7JBon0vHdK9KxeaYk/z
+FH3d5j65AdW5Nz+wzlR5LZmOwk4kRzqmo/lZEqpUMzqsN873cXkQPUzWx3QpmgopgJdTN8A7d+7W
+Ttt+pThocji/96QDd3bYilu+tMvlGL4HHOiHi/0OOEoF/nPzGXSK1jP4ElJ1yLXDL6c2D53FP196
+Z04G57w3OeeX8MN2Oh/vpxd5Tvrb/IUGd5Fp0HHmoy3nPMs/UEsBAh4DFAAAAAgAYqE3W/6X9vxy
+AwAAhwsAAAgAGAAAAAAAAQAAALSBAAAAAERJQUxPR1JDVVQFAAMHKdNodXgLAAEE6AMAAAToAwAA
+UEsFBgAAAAABAAEATgAAALQDAAAAAA=="
+
+    DIALOGRC_CONFIG_NEON_GREEN="UEsDBBQAAAAIAF2yN1sBwalOTQMAAKULAAAIABwARElBTE9HUkNVVAkAAwFH02iwR9NodXgLAAEE
+6AMAAAToAwAAnVXbbts4EH3XVwySPjSA7XVcdB+M7hbZxmkN7DpA6qCPBi1NJCIUKZCUkwD9+B1S
+l1CKEqsNHEBzOWeGw+HMKbxbJ0swgsX3D0zjTMeTA5zPzuewmJ8v/qDf/Bzm8+WHP5cfP4JVOawe
+C3gXncKBC1zGSt7lKkGSb0o5tTxHcDqelppZriTckRvcKQ0JZ0KlE8iZjTM08L2JSQBBdkPaHGfR
+KXFtnwryUHdwYKJEs/TKTZnvUYP7mwJ8kl78mwzfreYybQwnxosnZPhHKYFMNojrzc/rqyuHuLDk
+sy8tesN7Sg9TrUqZTPaUVP2Z8TQT9G8/n0UuClpgpsDYTqujzaJKhL9g3jgYLBhZ6TiOFPJSWF5Q
+AR54kqKlI5W2KO3ZLKodcVdZiOPkpCGxbD8VKFObVSwWH+1ePXo9FfeA2lB4IiHFjhybBP5j9+id
+rGbOiQlfeKprfC+4sRNAG88mwGUsyoRcMwSnn0UHbrjdcYu5ITIqkk8lY4l6qO8NKAE0n2GbcQNM
+GAW21JIOJKvrm0WlwZ2pIC3Flnya6y2LQmkL1xsgydkdwNt8zI0PGWvEGhEZL1Qu5PH+681qtZlc
+rq4ubv/dTq43Z0GSNcILRxCX7XlqVHXA8SjLraibNvLf46F7pRNq4QpbCUfAF7HlBwTqVduUOqqE
+HfOmZ/yPb+vtanKzumywa8leR3PZx4+If49PXRZS9PMYyG4omUGq30pKsD2KLpdX/WZir9KNTG4t
+6YUH7cWdTOJoWKdJWnSvW0KxmhtMx1kQ1njF8bgBMGzsZ/iYFg9IOtk/s4xq9iu3KwpFs8htDi4T
+HvtZWpE1hl1r6F/tyxbyYxFlGRQmJzEsS/j8O+6dkzSoI9ewphHa3Bx9Hi2boP2BCfAezNSGNx73
+lqXNDGLHhlcbx3ZAI6M8v1QHcjX+hWgvwSOifnEbK7gyv8HGRo0HwS+jDrLcFsC0bhdK6YVj8109
+yA4q6aJCkrZHMhTF1C324NqdrkWFuyyYebTQcwhwTm5GmlO3+O7Y8a9rCNrBDJ/vBikTKZ6q2EGr
+egLfr7p2Gb8JU1amzazx37+6RBedLbp49Tn35+pieLAuek96MThauxT96fYGR2+oLAanymv4/wFQ
+SwECHgMUAAAACABdsjdbAcGpTk0DAAClCwAACAAYAAAAAAABAAAAtIEAAAAARElBTE9HUkNVVAUA
+AwFH02h1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBOAAAAjwMAAAAA"
+
+    DIALOGRC_CONFIG_NEON_YELLOW="UEsDBBQAAAAIACKyN1u9YHqOUAMAALoLAAAIABwARElBTE9HUkNVVAkAA5BG02hzR9NodXgLAAEE
+6AMAAAToAwAAnVXbbts4EH3XVwySPjSA7XW8aB+MdovsxsEayNpA6iDok0FLE4kIRQkk5SRAP36H
+1CWUItdyAwfQXM6Z4XA4cw4fltEctGDh0zNTOFHhaA+Xk8spzKaXsz/oN72E6XT+5+f5p09gshQW
+Lzl8CM5hzwXOw0w+plmEJN8Vcmx4imB1PC4UMzyT8Ehu8JgpiDgTWTyClJkwQQ3f65gEEGTXpE1x
+EpwT1+Y1J4/sEfZMFKjnTrkq0h0qsH9jgC/SiX+R4btRXMa14Uw78YwMf2eZQCZrxHr1c31zYxFX
+hnx2hUFn+EjpYayyQkajHSVVfSY8TgT9m28XgY2CBpjOMTTj8miToBThK0xrB405Iysdx5JCWgjD
+cyrAM49iNHSkwuSFuZgElSNuSwtxnJ3VJIbtxgJlbJKSxeCL2WUvTk/F3aPSFJ5ISLElxzqB/9gT
+OiejmHViwhWe6ho+Ca7NCNCEkxFwGYoiItcEweonwZ5rbrbcYKqJjIrkUklYlD1X9waUAOpvsEm4
+BiZ0BqZQkg4ky+ubBIXGrS4hDcWGfOrrLfI8UwbWKyDJ2i3A2VzMlQsZKsQKEWgnlC7k8fHH4vZ2
+/TC6Xtxc3d9uRuvVhZdlBXHCMch1c6IKVh7xBJjhRlR9G7jvE7C7TEXUxiW4FI6hr0LD9wjUsKau
+d1AKW+ZMbwQP/y43i9Hd4rrGLiU7jOayix+SwBO+tmlI0U2kJ72+bHqpfi8rwXYo2mRO9ZuZHaQb
+mt1S0kv3moxbmcThuFanNPBOy/hiOUCYChMvrnaKAYE9pN/fb/hBne6xtPJ/oxnW8zd2b+QZzSW7
+RbiMeOjmaslWG7aNoXu/7xvJjUiUhVeblES/Mv4gaLm3jlKjjtzEksZpfXn0ebxwgpYJRsA7OF0Z
+fvHINyyupxE7OseaQKaFGhjm7cVakK3yKeHeoweE/ccuMO/W3EIbHDbsRb8P209znwNTqlkwhROO
+TvvsWbZgURvmszSdkqDIx3bVe3dvdQ3KX27e+KMVn4KHs3I93ay6wbcHkHtjfdAW5sAB75BSkeK1
+DO41rGNwXasqlxM2Y8yKuJ467vvkrTprrdXZwXfdnbGz/iE767ztWe+YbVN059wvODrTZdY7Xg7h
+/wdQSwECHgMUAAAACAAisjdbvWB6jlADAAC6CwAACAAYAAAAAAABAAAAtIEAAAAARElBTE9HUkNV
+VAUAA5BG02h1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBOAAAAkgMAAAAA"
+
+    DIALOGRC_CONFIG_NEON_WHITE="UEsDBBQAAAAIAAW1N1tsEaGzmwMAADsNAAAIABwARElBTE9HUkNVVAkAA/pL02gRTNNodXgLAAEE
+6AMAAAToAwAApVbJbtswEL3zKwbNxQKcoMi9KLKiRdMFbYoeDUqa2Exo0uGSpJ8T9NBTT/0E/1iH
+pCxLluwo6cWyyJk3b0az7bE9ODK3XtxpKBEKra7E1Bu+/L38pWHBDYdScKmnMDo2XBUaEL4YdDpj
+eyzoOnHHDekZtMxbnBRaamPhDXz+FO6/oQOLAcdpA6Mr+pl76cRCItyLcorOgvZu4V12wCpBnKQb
+Ann1agXieL4vUU3dLKE4fHC5fojnxPoOjRVaEQgdTEiQlF8H3Y/8BqOQMzwIcQlBvZhhcSOFdWNA
+VxyMQahCeoqAmyGE8wN2J6xwE+FwHt05P49UZrzU96uYEAG0b+FyJixwaTU4bxQ5pCCG4SBGxCaV
+GuKEzJOhK69KijknTyRntjCIKkWPREfHF0cnH8ZwenZ+9P3ickzRzGpdDlbPc/oyo4KTTbQOrzl4
+ywNguspYsroGrJF+vHt/eTYOZJqIBRcPPNAqxfKRXNMU5Ugwj199HONNCZE+fXJ/DV5hVqRb0BST
+5R/npd5ipYE7hqbJjDnhJG410gyIpS9hwqPfRsU6yKAZyDrXLlQAd6EydrHMvXNaTXhBkl22X89O
+21xrZKEGY5NoP3ofdYrAjDK968MuCzf4c7AHXQO1K0+ZeJYjGszyb8qctisrRMlzlJu0tzi0E7Xi
+38Z9btBXaYeKOg0djISirhZaRAb7sLWYWBQjqYF2YqL3GVwDbeR5s1j7CC/QUv+31IOQm2LWolJx
+6OsZ/YXdA9Yu48bbTq96gDb8ar42WAlVioJ6X2yyC21FGmUjrehdQ+GNpTtqmsvHjIV7J2KJBS2a
+UU8QrfnNUXkWfprx2hLqrnct7UF+WaBJRLNF6ai8s22EmTWsxFaoFiUWFAcejmoTCbUykey1TEQt
+h+WAnmFpBk8tjNCJW4+O24zM2GjH0shez5I1947ymiRPOh37PayaKLFv2RowYoRGMajyOupdPgHr
+GTFZpwMtJuKK8i+mKou7yeDybek2OVU4HUI9A6u5WtDHSXtfIeaceW5Mc43YMYQbqjmR06xs6zah
+ml0k5hU5wq99qJJVTsYUm6FcDF0zIk4aRPRKSx4tmstHIzQL/1f+BrFBoaiZ9WC1QHbTCl5sYIQd
+jZo27ZkoaGHkCTPmrkGqQCW3p2Qr4DlFNDVLo6e0gNMyOJpyP8WMxcdzR0oXr9qZDv93OMHh5nh6
+OeRqMhDm5mx4OWhseIcbLXk33D9QSwECHgMUAAAACAAFtTdbbBGhs5sDAAA7DQAACAAYAAAAAAAB
+AAAAtIEAAAAARElBTE9HUkNVVAUAA/pL02h1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBOAAAA
+3QMAAAAA"
+
+    DIALOGRC_CONFIG_DEFAULT="UEsDBBQAAAAIAJalN1tZZZqOaQMAAEkLAAAIABwARElBTE9HUkNVVAkAA+ww02hjMdNodXgLAAEE
+6AMAAAToAwAAjVbfT+MwDH7vXxGNF5C26bTHE8c0YLtDB5sEQ4inKWu9NlqWVPkBTLo//py03dJ2
+BZBAtf19tuM4NmfRGXm0YmDYDkgsxYalVlHDpCAbxoFspCIJo1ym0RlCJ9bIHZpjyvmepCAAwZCQ
+9Z70ChgZDGIFqByomFw6H1c9R0Xycp+DJnJD3ii3oH965dzu1qCI+xkQcim8eIWGJ6OYSCtDT3sR
+XZFrKTlQUTEW83+L2cwxJgYxa2vAG84xdUiVtCLpr2m8LT8zlmYcf824jyIozgSM+wreQGkYX0Qu
+MhhCdQ6xGRSlGEaFSH6RHxVAQ07RiuVxgcjOcsNyLNg7S1IweExrcmsuhlEJhFVhQR+9XuXE0PWA
+g0hNVngx8GHW8sPr8TJcThgenaBihcAqgQe6BQ8yijoQ5f6i4gziLWfa9AmYeNgnTMTcJgjNgDj9
+MHpjmpkVM7DT6AwL51PJaCLfy3smmADoMVlmTBPKtSTGKoEHEtgfXKphZDWsdEFBF3PnYYmQwky0
+zXOpDBoISi6Cw3ubPuCfsEegZETaCwUEEec3r5N5//r+edpfzC+C/Eq0F47o6/vJzd9+8bfE3x4O
+UnKKkzU5L3/ulhhjNmuSDDMcSqr/DpmYVklsBVtLhR1VEgvhyCxINeokNuwNCLasqaobFcKKelOT
+HRblTtBuOhMNB2EF2qG3sK/zUdFM4URip9I46aqVzvnj9LZR/3pGnK6B1x15Vaswr9P7+8XLp5Xp
+9NVOq9YYlTd8x0EvMSej2FnaI6HWDwdeozGa9CegKs6CgNorPosYUMLWPRLrTRxIDXYt4SO9kXEo
+OgcztyhyiYPFrQ0mElwPbjAWgMqwOhi6EnkAYYNz71D87NQHeC3rivVFznc4AauLwc9PSstx8OOG
+Yw2CLg1fvY8lTatJQtPuKyijmBq6K0b7JVSRjq/P8d3Ta1Dbr7EVv+2jlYd/vuGTu3GbJ7g7v4m+
+Lmp8kvbd0j7nhCp1WAzWC8ccfz9Op/PGrJbvosZJ6pzQxaFLMuD5wG3m4Pqdrj2c/QqqjzNcyzsS
+kJ1cHcSpvzrj7BS/Riyj+6VZHvMRcEUK/AfNRw8617N9+6oS0ti6XZstpTatxor/7urk1jYc1dbh
+6NtTc3R6bHY7aI2xUccc63bRmCijkyOlg/4fUEsBAh4DFAAAAAgAlqU3W1llmo5pAwAASQsAAAgA
+GAAAAAAAAQAAALSBAAAAAERJQUxPR1JDVVQFAAPsMNNodXgLAAEE6AMAAAToAwAAUEsFBgAAAAAB
+AAEATgAAAKsDAAAAAA=="
+
+    SCHEME=$(grep -o '^[[:space:]]*dialogrc_color-scheme=[^[:space:]]*' "$INPUTS"/configs/gcm.cfg | cut -d'=' -f2 2>/dev/null)
+    eval "DIALOGRC_CONFIG_SCHEME=\${DIALOGRC_CONFIG_${SCHEME}}"
+
+
+    # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+    # Generate DIALOGRC
+    if [ ! -f "$INPUTS"/configs/DIALOGRC ]; then
+        echo "$DIALOGRC_CONFIG_SCHEME" | \
+            base64 --decode > "$INPUTS"/configs/DIALOGRC.zip 2> /dev/null && \
+            unzip -d "$INPUTS/configs" "$INPUTS"/configs/DIALOGRC.zip  > /dev/null 2>&1 && \
+            rm -f "$INPUTS"/configs/DIALOGRC.zip 2>/dev/null
+    fi
+    # Export DIALOG config
+    export DIALOGRC="$INPUTS"/configs/DIALOGRC
+}
+
+definitionsDIALOGRC # Update the visual settings of the dialog
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# updateDictionary - Update the language and the messages displayed in the Menus
+updateDictionary(){
+    # LANGUAGE_en base64
+    LANGUAGE_en="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
+EQAAAAA="
+
+    # LANGUAGE_pt base64
+    LANGUAGE_pt="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"
+
+    if [ ! -f "$INPUTS"/data/LANGUAGE_en.txt ]; then
+        echo "$LANGUAGE_en" | base64 --decode > "$INPUTS"/data/LANGUAGE_en.zip 2> /dev/null && \
+            unzip -d "$INPUTS/data" "$INPUTS"/data/LANGUAGE_en.zip  > /dev/null 2>&1 && \
+            rm -f "$INPUTS"/data/LANGUAGE_en.zip 2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS"/data/LANGUAGE_pt.txt ]; then
+        echo "$LANGUAGE_pt" | base64 --decode > "$INPUTS"/data/LANGUAGE_pt.zip 2> /dev/null && \
+            unzip -d "$INPUTS/data" "$INPUTS"/data/LANGUAGE_pt.zip  > /dev/null 2>&1 && \
+            rm -f "$INPUTS"/data/LANGUAGE_pt.zip 2>/dev/null
+    fi
+
+    SLOGAN="MiSTer GCM"
+    SLOGAN_OR_CORE="MiSTer GCM"
+
+    # LANGUAGE 'pt' or 'en' - Select Language
+    LANGUAGE=$(grep -o '^[[:space:]]*language=[^[:space:]]*' "$INPUTS"/configs/gcm.cfg | \
+        cut -d'=' -f2 2>/dev/null)
+
+    if [ "$LANGUAGE" = "en" ]; then
+        source "$INPUTS"/data/LANGUAGE_en.txt
+    else
+        source "$INPUTS"/data/LANGUAGE_pt.txt
+
+    fi
+}
+
+updateDictionary # Update the language and the messages displayed in the Menus
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# Check and generate the configuration files for GCM                                        #
+generateFiles(){
+    # HELP MESSAGES en - base64
+    HELP_MESSAGE_en="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"
+
+    # HELP MESSAGES pt - base64
+    HELP_MESSAGE_pt="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
+LnR4dFBLBQYAAAAAAQABADkAAAAnDQAAAAA="
+
+    # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+    # Generate HELP TXT
+    if [ ! -f "$INPUTS"/data/HELP_en.txt ]; then
+       echo "$HELP_MESSAGE_en" | base64 --decode > "$INPUTS"/data/HELP_en.txt.zip 2> /dev/null && \
+           unzip -d "$INPUTS/data" "$INPUTS"/data/HELP_en.txt.zip  > /dev/null 2>&1 && \
+           rm -f "$INPUTS"/data/HELP_en.txt.zip 2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS"/data/HELP_pt.txt ]; then
+        echo "$HELP_MESSAGE_pt" | base64 --decode > "$INPUTS"/data/HELP_pt.txt.zip 2> /dev/null && \
+            unzip -d "$INPUTS/data" "$INPUTS"/data/HELP_pt.txt.zip  > /dev/null 2>&1 && \
+            rm -f "$INPUTS"/data/HELP_pt.txt.zip 2>/dev/null
+    fi
+
+    eval "HELP_MESSAGE=\${HELP_MESSAGE_${LANGUAGE}}"
+
+    # NO GAMEPAD en - base64
+    NO_GAMEPAD_en="CiBObyByZWdpc3RlcmVkIGdhbWVwYWQgZm91bmQhIAoKIFRvIHVzZSB0aGUgZnVuY3Rpb25zIG9m
+IHRoaXMgcHJvZ3JhbSwgeW91IG11c3QgcmVnaXN0ZXIgYSBnYW1lcGFkLiBUbwpkbyB0aGlzLCB0
+aGUgZ2FtZXBhZCBuZWVkcyB0byBiZSBjb25maWd1cmVkIGZpcnN0IGluICdNaVNUZXIgRlBHQScu
+CgpBbHNvLCBkb24ndCBmb3JnZXQgdG8gYWNjZXNzIHRoZSAnSEVMUCcgbWVudSBmb3IgaW1wb3J0
+YW50IGluZm9ybWF0aW9uCm9uIGhvdyB0byBjb25maWd1cmUgYW5kIHVzZSB0aGlzIHNjcmlwdC4K
+CiBDbGljayAnRXhpdCcgdG8gY29udGludWUuCg=="
+
+    # NO GAMEPAD pt - base64
+    NO_GAMEPAD_pt="CiBOZW5odW0gZ2FtZXBhZCByZWdpc3RyYWRvIGZvaSBlbmNvbnRyYWRvIQoKIFBhcmEgdXRpbGl6
+YXIgYXMgZnVuw6fDtWVzIGRlc3RlIHByb2dyYW1hLCDDqSBuZWNlc3PDoXJpbyByZWdpc3RyYXIg
+dW0KZ2FtZXBhZC4gUGFyYSBmYXplciBpc3NvLCBvIGdhbWVwYWQgcHJlY2lzYSBzZXIgY29uZmln
+dXJhZG8gcHJldmlhbWVudGUKbm8gJ01pU1RlciBGUEdBJy4KCiBBbMOpbSBkaXNzbywgbsOjbyBz
+ZSBlc3F1ZcOnYSBkZSBhY2Vzc2FyIG8gbWVudSAnSEVMUCcgcGFyYSBvYnRlcgppbmZvcm1hw6fD
+tWVzIGltcG9ydGFudGVzIHNvYnJlIGNvbW8gY29uZmlndXJhciBlIHVzYXIgZXN0ZSBzY3JpcHQu
+CgogQ2xpcXVlIGVtICdTYWlyJyBwYXJhIGNvbnRpbnVhci4K"
+
+    # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+    # Generate NO_GAMEPAD TXT
+    if [ ! -f "$INPUTS/data/NO_GAMEPAD_en.txt" ]; then
+        echo "$NO_GAMEPAD_en" | base64 --decode > "$INPUTS/data/NO_GAMEPAD_en.txt" \
+            2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS/data/NO_GAMEPAD_pt.txt" ]; then
+        echo "$NO_GAMEPAD_pt" | base64 --decode > "$INPUTS/data/NO_GAMEPAD_pt.txt" \
+            2>/dev/null
+    fi
+
+    # LIST CONTROLLER IDS - base64
+    LIST_CONTROLLER_IDS="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"
+
+    if [ ! -f "$INPUTS/configs/LIST_CONTROLLER_IDS.txt" ]; then
+        echo "$LIST_CONTROLLER_IDS" | \
+            base64 --decode > "$INPUTS"/configs/LIST_CONTROLLER_IDS.txt.zip 2> /dev/null && \
+            unzip -d "$INPUTS/configs" "$INPUTS"/configs/LIST_CONTROLLER_IDS.txt.zip  > /dev/null 2>&1 && \
+            rm -f "$INPUTS"/configs/LIST_CONTROLLER_IDS.txt.zip 2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS/configs/selected_gamepad_ID.cfg" ]; then
+        touch "$INPUTS/configs/selected_gamepad_ID.cfg" 2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS/configs/selected_gamepad_MODEL.cfg" ]; then
+        echo "$NO_GAMEPAD" > "$INPUTS/configs/selected_gamepad_MODEL.cfg" 2>/dev/null
+    fi
+
+    if [ ! -f "$INPUTS/configs/registered_gamepads.cfg" ]; then
+        touch "$INPUTS/configs/registered_gamepads.cfg" 2>/dev/null
+    fi
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# PRIMARY FUNCTIONS - Functions responsible for the menus and key actions of the program    #
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# mainMENU - Menu for Cores and Other Configuration Options
+mainMENU(){
+    clear
+
+    controllerID # Check the ID and MODEL of the registered controller
+    checkGamepadDIR # Check if the gamepad-$ID directory exists
+    countGamepads # Count the number of registered gamepads
+    tipsFlags # check tips status
+
+    SLOGAN_OR_CORE="$SLOGAN"
+    increase=17
+    linesGenerate # Generate the lines - List of Cores
+    MESSAGE_MENU="$MESSAGE_SELECT_CORE"
+    param_1=67
+    param_2=4
+    extra_options="--no-cancel"
+    generateHeader # Generate the header of the dialog menu
+    generateCoresMENU # Insert the cores into the MENU from linesGenerate
+    DIALOG+="
+- -------------------- \\
+X \"$EXIT_PROGRAM\" \\
+- -------------------- \\
+A \"$ADD\" \\
+V \"$VIEW\" \\
+E \"$EXCLUDE\" \\
+- -------------------- \\
+G \"$GAMEPADS\" \\
+S \"$SETTINGS\" \\
+- -------------------- \\
+H \"$HELP\""
+
+runDIALOG # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "X")
+            exitProgram
+            ;;
+        "A")
+            addCORE
+            ;;
+        "V")
+            viewCORES
+            ;;
+        "E")
+            excludeCORE
+            ;;
+        "G")
+            gamepadsMENU
+            ;;
+        "S")
+            settingsMENU
+            ;;
+        "H")
+            helpMENU
+            ;;
+        "-")
+            mainMENU
+            ;;
+        *)
+            coreMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# ADD - Add Core
+addCORE(){
+    clear
+
+    testGamepads # Check if any gamepad is registered
+
+    DIALOG="dialog --ok-label \"$OK\" --cancel-label \"$CANCEL\" --clear --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \"$CORE_SELECTION\" 9 67 4 \
+        L \"$FROM_LIST\" \
+        T \"$FROM_TEXT\""
+    
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+    
+    if [ "$status_message" = 1 ]; then
+        mainMENU
+    fi
+
+    select_option="$choice"
+
+    selectINPUT(){
+        if [ "$select_option" = "L" ]; then
+
+            title=$(printf "%s" "$ATTENTION")
+            message_ln1=$(printf "%s" "$WAIT_LIST")
+            message_ln2=$(printf "%s" "$CLICK_OK")
+            messageDIALOG
+
+            clear
+    
+            MESSAGE_MENU="$NAME_SELECTION"
+            param_1=67
+            param_2=4
+            lines_menu=28
+            extra_options=""
+            generateHeader # Generate the header of the dialog menu
+
+            generateCoresList # Generates a list of found cores, removes duplicates, and sorts
+
+            DIR_TARGET="$tmp_message" # DIR_TARGET to the linesArray
+            linesArray # Generate the lines for the menu
+            rm -f "$tmp_message" 2>/dev/null
+
+            for ((i = 1; i < counter; i++)); do
+                output=${lines_array[((i-1))]}
+                output_menu=$(echo "$output" | cut -c1-60 2>/dev/null)
+                if [ "$i" != "$((counter - 1))" ]; then
+                    DIALOG+="$i \"$output_menu\" \\
+"
+                else
+                    DIALOG+="$i \"$output_menu\""
+                fi
+            done
+    
+            runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+            if [ "$status_message" = 1 ]; then
+                mainMENU
+            fi
+
+            CORE="${lines_array[((choice-1))]}"
+            CHECK_SELECTION="$CORE_SELECTED"
+
+        else
+            title=$(printf "%s" "$ADD_CORE")
+            message_ln1=$(printf "%s" "$INSERT_CORE_NAME")
+            inputDIALOG
+
+            if [ "$status_message" = 1 ]; then
+                mainMENU
+            fi
+
+            CORE="$TMP_INPUT"
+
+            if [ "$CORE" = "" ]; then
+                addCORE
+            fi
+
+            CHECK_SELECTION="$TYPED"
+        fi
+    }
+    selectINPUT
+
+    checkCORE # Checks if the Core exists or has already been added to the list
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'." "$CHECK_SELECTION" "$CORE")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        mainMENU
+    fi    
+    
+    if [ -d "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"-STORED ]; then
+        mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"-STORED "$INPUTS"/gamepad-"$ID"/"$CORE-$ID" 2>/dev/null
+            
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$RESTORE_CORE")
+        messageDIALOG
+        mainMENU
+    fi
+
+    title=$(printf "%s" "$CHOOSE_GAMEPAD")
+    message_ln1=$(printf "%s" "$CHOOSE_QUESTION")
+
+    sizeAdjust # Adjust the menu formatting proportionally to the text
+
+    DIALOG="dialog --ok-label \"$OK\" --cancel-label \"$CANCEL\" --no-tags --stdout \
+            --title \"$title\" \
+            --menu \"$message_ln1\" 10 $size_dialog 2 \
+            1 \"$JOY_TYPE_1\" \
+            2 \"$JOY_TYPE_2\" \
+            3 \"$JOY_TYPE_3\""
+        
+    runDIALOG NO_CORE_CHOICE  # Execute the dialog menu that was generated
+
+    if [ "$status_message" = 1  ]; then
+        mainMENU
+    fi
+    JOY_TYPE="$choice"
+
+    NAME="JOY_TYPE_${choice}"
+    OUTPUT="${!NAME}"
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s: \"%s\"." "$YOU_SELECTED" "$OUTPUT")
+    message_ln2=$(printf "%s" "$CORRECT")        
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        mainMENU
+    fi   
+
+    mkdir "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID" 2>/dev/null
+    if [ "$TIPS" = 1 ]; then
+        touch "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games 2>/dev/null
+        touch "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts 2>/dev/null
+    fi
+
+    if [ "$JOY_TYPE" = 1 ]; then
+        echo "v3" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/TYPE_"$ID".cfg 2>/dev/null
+    elif [ "$JOY_TYPE" = 2 ]; then
+        echo "jk" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/TYPE_"$ID".cfg 2>/dev/null
+    else
+        echo "jk_v3" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/TYPE_"$ID".cfg 2>/dev/null
+    fi
+    title=$(printf "%s" "$SLOGAN")
+    message_ln1=$(printf "%s '%s' %s" "$CORE_CREATED_1" "$CORE" "$CORE_CREATED_2")
+    messageDIALOG
+    mainMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# excludeCORE - Exclude Core
+excludeCORE(){
+    clear
+
+    counter=$(find "$INPUTS"/gamepad-"$ID" -type d -name "*-$ID" | sed "s|-$ID||g" | sed "s|$INPUTS\/||g" | wc -l 2>/dev/null)
+    if [ "$counter" = 0 ]; then
+        mainMENU
+    fi
+    testGamepads # Check if any gamepad is registered
+    increase=8
+    linesGenerate # Generate the lines - List of Cores
+    MESSAGE_MENU="$MESSAGE_TRASH"
+    param_1=60
+    param_2=4
+    extra_options="--no-cancel"
+    generateHeader # Generate the header of the dialog menu
+    DIALOG+="
+X \"$EXIT_MENU\" \\
+- \"-------------\" \\"
+    generateCoresMENU EXCLUDE_SYMBOL # Insert the cores into the MENU from linesGenerate
+
+    runDIALOG # Execute the dialog menu that was generated
+    
+    case "$choice" in
+        "X")
+            mainMENU
+            ;;
+        "-")
+            excludeCORE
+            ;;
+    esac
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'?" "$EXCLUSION" "$CORE")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+
+    if [ "$status_message" = 0 ]; then
+        title=$(printf "%s" "$CONFIRMATION")
+        message_ln1=$(printf "%s '%s'?" "$SAVE_PROFILES" "$CORE")
+        yesnoDIALOG
+        test_path="$INPUTS/gamepad-$ID/$CORE-$ID"
+        if [ "$status_message" = 1 ]; then
+            if [ -z "$test_path" ] || [ "$INPUTS" == "/" ] || [ -z "$test_path" ]; then
+                mainMENU
+            fi    
+            rm -rf "$test_path" 2>/dev/null
+            title=$(printf "%s" "$EXCLUDED_CORE")
+            message_ln1=$(printf "%s" "$EXCLUDED_FILES")
+            messageDIALOG
+        else
+            mv "$test_path" "$test_path"-STORED 2>/dev/null
+            title=$(printf "%s" "$EXCLUDED_CORE")
+            message_ln1=$(printf "%s" "$RETAINED_FILES")
+            messageDIALOG
+        fi
+    fi    
+    mainMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# viewCORES - Display List of Cores from MiSTer (names.txt - Fix .mgl names)
+viewCORES() {
+    clear
+
+    if [ ! -f "$MISTER_ROOT/names.txt" ]; then
+        title=$(printf "%s" "$SHOW_MENU")
+        message_ln1=$(printf "%s" "$MISSING_NAMES_1")
+        message_ln2=$(printf "%s" "$MISSING_NAMES_2")
+        messageDIALOG
+        generateCoresList HEADERS
+        SHOW_TITLE="$SHOW_FIND"
+    else
+        cp "$MISTER_ROOT/names.txt" "$tmp_message" 2>/dev/null
+
+        check_cores=("$CORES_COMPUTER" "$CORES_CONSOLE" "$CORES_OTHER" "$CORES_UNSTABLE")
+
+        MEM_MSG="$USE_NAMES|$MENU_NAMES"
+        echo "$MEM_MSG" > "${tmp_message}.tmp"
+        while IFS= read -r line; do
+            first_col="${line%%:*}"
+            second_col="${line:20}"
+            setname_found=""
+            for dir in "${check_cores[@]}"; do
+                filepath="$dir/$first_col.mgl"
+                if [ -f "$filepath" ]; then
+                    setname_found=$(sed -n 's/.*<setname>\(.*\)<\/setname>.*/\1/p' "$filepath")
+                    break
+                fi
+            done
+
+            if [ -n "$setname_found" ]; then
+                first_col="$setname_found"
+                len=${#first_col}
+                if [ "$len" -ge 20 ]; then
+                    printf "%s%s\n" "$first_col" "$second_col"
+                else
+                    pad=$((20 - len - 1))
+                    printf "%s:%*s%s\n" "$first_col" "$pad" "" "$second_col"
+                fi
+            else
+                echo "$line"
+            fi
+        done < "$tmp_message" >> "${tmp_message}.tmp"
+
+        mv "${tmp_message}.tmp" "$tmp_message"
+
+        SHOW_TITLE="$SHOW_MENU"
+    fi
+
+    dialog --exit-label "$EXIT" --title "$SHOW_TITLE" --textbox "$tmp_message" 28 51
+
+    rm -f "$tmp_message" 2>/dev/null
+    mainMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# helpMENU - Display Help Text for Script Functionality
+helpMENU(){
+    clear
+
+    sed -i "s/^help_tips=[^ ]*/help_tips=0/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+    help_flag=0 # Flag that enables HELP menu hint
+    if [ -f "$INPUTS"/data/HELP_"$LANGUAGE".txt ]; then
+        dialog --exit-label "$EXIT" --title "$SLOGAN" --textbox "$INPUTS"/data/HELP_"$LANGUAGE".txt 28 75
+    fi
+    mainMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# settingsMENU - General Configuration Menu
+settingsMENU(){
+    clear
+   
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \"$MENU_SETTINGS\" 14 67 4 \
+        X \"$RETURN_2\" \
+        - ----------------------------- \
+        C \"$COLORS_MENU\" \
+        L \"$LANGUAGE_MENU\" \
+        T \"$TIPS\" \
+        - ----------------------------- \
+        B \"$BACKUP\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "X" | "x")
+            mainMENU
+            ;;
+        "C")
+            colorsMENU
+            ;;
+        "L")
+            languageMENU
+            ;;
+        "T")
+            tipsMENU
+            ;;
+        "B")
+            backupMENU
+            ;;
+        "-")
+            settingsMENU
+            ;;
+        *)
+            mainMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# COLORS_MENU - Adjust Color Theme
+colorsMENU(){
+    clear
+   
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \"$SELECT_COLORS\" 16 67 4 \
+        X \"$EXIT_MENU\" \
+        - ----------------------------- \
+        B \"$COLOR_BLUE\" \
+        Y \"$COLOR_YELLOW\" \
+        M \"$COLOR_MAGENTA\" \
+        G \"$COLOR_NEON_GREEN\" \
+        N \"$COLOR_NEON_YELLOW\" \
+        W \"$COLOR_NEON_WHITE\" \
+        D \"$COLOR_DEFAULT\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "X")
+            settingsMENU
+            ;;
+        "-")
+            colorsMENU
+            ;;
+        "B" | "Y" | "M" | "G" | "N" | "W" | "D")
+            
+            rm -f "$INPUTS"/configs/DIALOGRC 2>/dev/null
+            case "$choice" in
+                "B") COLOR_SELECTED="BLUE" ;;
+                "Y") COLOR_SELECTED="YELLOW" ;;
+                "M") COLOR_SELECTED="MAGENTA" ;;
+                "G") COLOR_SELECTED="NEON_GREEN" ;;
+                "N") COLOR_SELECTED="NEON_YELLOW" ;;
+                "W") COLOR_SELECTED="NEON_WHITE" ;;
+                "D") COLOR_SELECTED="DEFAULT" ;;
+            esac
+
+            sed -i "s/^dialogrc_color-scheme=[^ ]*/dialogrc_color-scheme=$COLOR_SELECTED/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+            definitionsDIALOGRC # Update the visual settings of the dialog
+            colorsMENU
+            ;;
+        *)
+            colorsMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+## languageMENU - Select Language (en for English, pt for Portuguese)
+languageMENU(){
+    clear
+
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \" $SELECT_LANGUAGE\" 11 67 4 \
+        X \"$EXIT_MENU\" \
+        - \"------------------------------\" \
+        E \"$EN\" \
+        P \"$PT\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    # Run multiple functions to update the language
+    updateLanguage(){
+        updateDictionary # Update the language and the messages displayed in the Menus
+        updateNoGamepadMessage # Update the NO_GAMEPAD message in the selected language
+        controllerID # Check the ID and MODEL of the registered controller
+        languageMENU
+    }
+
+    case "$choice" in
+        "X")
+            settingsMENU
+            ;;
+        "-")
+            languageMENU
+            ;;
+        "E")
+            sed -i "s/^language=[^ ]*/language=en/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+            updateLanguage
+            ;;
+        "P")
+            sed -i "s/^language=[^ ]*/language=pt/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+            updateLanguage
+            ;;
+        *)
+            settingsMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+## tipsMENU - Interactive Tips
+tipsMENU(){
+    clear
+
+    tipsCOMMAND(){
+        sed -i "s/^tips=[^ ]*/tips=$tips_status/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+        sed -i "s/^help_tips=[^ ]*/help_tips=$tips_status/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+        tips_flag="$tips_status" # Flag that enables help tips next to the menus
+        help_flag="$tips_status" # Flag that enables HELP menu hint
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$TIPS_MESSAGE")
+        messageDIALOG
+        settingsMENU
+    }
+
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \"$TIPS_MENU\" 11 67 4 \
+        X \"$EXIT_MENU\" \
+        - \"------------------------------\" \
+        A \"$ACTIVE_TIPS\" \
+        D \"$DEACTIVE_TIPS\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "-")
+            tipsMENU
+            ;;
+        "X")
+            settingsMENU
+            ;;
+        "A")
+            tips_status="1"
+            TIPS_MESSAGE="$TIPS_ENABLED"
+            tipsCOMMAND
+            ;;
+        "D")
+            tips_status="0"
+            TIPS_MESSAGE="$TIPS_DISABLED"
+            tipsCOMMAND
+            ;;
+        *)
+            settingsMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# backupMENU - Backup routines for program and gamepad settings
+backupMENU(){
+    clear
+
+    DIALOG="dialog  --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \"$BACKUP_MENU\" 12 67 4 \
+        X \"$EXIT_MENU\" \
+        - \"------------------------------\" \
+        S \"$SAVE_BACKUP\" \
+        R \"$RESTORE_BACKUP\" \
+        D \"$DELETE_BACKUP\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "-")
+            backupMENU
+            ;;
+        "X")
+            settingsMENU
+            ;;
+        "S")
+            saveBACKUP
+            ;;
+        "R")
+            restoreBACKUP
+            ;;
+        "D")
+            deleteBACKUP
+            ;;
+        *)
+            settingsMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# saveBACKUP - Save backup routine
+saveBACKUP(){
+    clear
+
+    title=$(printf "%s" "$BACKUP_GCM")
+    message_ln1=$(printf "%s" "$MESSAGE_INIT_BACKUP")
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        backupMENU
+    fi
+    
+    BKP_DIR="$INPUTS"/tmp/Backup-GCM-MiSTer
+    DATE=$(date +"%y_%m_%d-%H_%M")
+    mkdir -p "$BKP_DIR"/Backup-GCM-MiSTer-"$DATE" 2>/dev/null
+    cp -R -f "$INPUTS"/gamepad-* "$BKP_DIR"/Backup-GCM-MiSTer-"$DATE" 2>/dev/null
+    cp -R -f "$INPUTS"/configs "$BKP_DIR"/Backup-GCM-MiSTer-"$DATE" 2>/dev/null
+    cp -R -f "$INPUTS"/data "$BKP_DIR"/Backup-GCM-MiSTer-"$DATE" 2>/dev/null
+    cd "$BKP_DIR" || backupMENU
+    zip -r "$INPUTS"/Backup-GCM-MiSTer-"$DATE".zip Backup-GCM-MiSTer-"$DATE"/* > /dev/null 2>&1
+    if [ -z "$BKP_DIR" ] || [ "$BKP_DIR" == "/" ]; then
+        mainMENU
+    fi    
+    rm -rf "$BKP_DIR"
+    title=$(printf "%s" "$BACKUP_FINISHED")
+    message_ln1=$(printf "%s 'Backup-GCM-MiSTer-%s.zip'" "$MESSAGE_SAVE_BACKUP_1" "$DATE")
+    message_ln2=$(printf "%s" "$MESSAGE_SAVE_BACKUP_2")
+    messageDIALOG
+    backupMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# restoreBACKUP - Restore backup routine
+restoreBACKUP() {
+    clear
+
+    BACKUP_MESSAGE="$BACKUP_RESTORE_MESSAGE"
+    generateBackupMENU # Generate the menu from the backup files found on disk
+
+    if [ "$choice" = "-" ]; then
+        restoreBACKUP
+    fi
+
+    if [ "$choice" = "X" ]; then
+        backupMENU
+    fi
+
+    selected_backup="${backups[$choice-1]}"
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'?" "$BACKUP_WANT" "$choice")
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$BACKUP_CANCELLED")
+        messageDIALOG
+        backupMENU
+    fi
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s" "$BACKUP_WANT_2")
+    message_ln2=$(printf "%s" "$CONTINUE")
+    yesnoDIALOG
+
+    if [ "$status_message" = 0 ]; then
+        if [ -z "$INPUTS" ] || [ "$INPUTS" == "/" ]; then
+            backupMENU
+
+        fi
+        rm -rf "${INPUTS:?}"/gamepad-* 2>/dev/null
+        rm -rf "${INPUTS:?}"/configs 2>/dev/null
+        rm -rf "${INPUTS:?}"/data 2>/dev/null
+        BKP_DIR="$INPUTS"/tmp/Backup-GCM-MiSTer
+        mkdir -p "$BKP_DIR" 2>/dev/null
+        extraction_dir="$BKP_DIR/$(basename "$selected_backup" .zip)"
+
+        if [ "$(echo "$extraction_dir" | grep Backup-GCM-MiSTer)" = "" ]; then
+            backupMENU
+        fi
+
+        if [ -d "$extraction_dir" ] && [ "$extraction_dir" != "/" ]; then
+            rm -rf "$extraction_dir" 2>/dev/null
+        fi
+
+        mkdir -p "$extraction_dir" 2>/dev/null
+        unzip "$selected_backup" -d "$BKP_DIR" > /dev/null 2>&1
+        mv "$extraction_dir"/* "$INPUTS/" 2>/dev/null
+
+        if [ ! -z "$BKP_DIR" ] || [ "$BKP_DIR" != "/" ]; then
+            rm -rf "$BKP_DIR" 2>/dev/null
+        fi
+
+        generateFiles # Check and generate the configuration files for GCM
+        title=$(printf "%s" "$SLOGAN")
+        message_ln1=$(printf "%s" "$BACKUP_RESTORED")
+        messageDIALOG
+    else
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$BACKUP_CANCELLED")
+        messageDIALOG
+        backupMENU
+    fi
+
+    backupMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# deleteBACKUP -delete backup routine
+deleteBACKUP(){
+    clear
+
+    BACKUP_MESSAGE="$BACKUP_DELETE_MESSAGE"
+    generateBackupMENU # Generate the menu from the backup files found on disk
+
+    if [ "$choice" = "-" ]; then
+        deleteBACKUP
+    fi
+
+    if [ "$choice" = "X" ]; then
+        backupMENU
+    fi
+
+    selected_backup="${backups[$choice-1]}"
+    output=$(basename "${backups[$choice-1]}")
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'?" "$BACKUP_DELETE_CONFIRM" "$choice")
+    message_ln2=$(printf "%s" "$CONTINUE")
+    yesnoDIALOG
+
+    if [ "$status_message" != 1 ]; then
+        rm -f "$selected_backup" 2>/dev/null
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$BACKUP_DELETED")
+        messageDIALOG
+    fi
+    backupMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# gamepadsMENU - Manage gamepad profiles and settings
+gamepadsMENU(){
+    clear
+
+    countGamepads # Count the number of registered gamepads
+
+    if [ "$lines_check" = 0 ] && [ "$tips_flag" = 1 ]; then
+        REGISTER="$REGISTER_TIPS"
+        MENU_GAMEPADS="$MENU_GAMEPADS_TIPS"
+        SHOW_RETURN_TIPS="1"
+    else
+        REGISTER="$REGISTER_DEFAULT"
+        MENU_GAMEPADS="$MENU_GAMEPADS_DEFAULT"
+    fi
+    if [ "$SHOW_RETURN_TIPS" = 1 ] && [ "$lines" != 0 ] && [ "$tips_flag" = 1 ]; then
+        RETURN="$RETURN_TIPS"
+    else
+        RETURN="$RETURN_DEFAULT" 
+    fi 
+
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+        --menu \" $MENU_GAMEPADS\" 16 67 4 \
+        X \"$RETURN\" \
+        - \"---------------------------------\" \
+        S \"$SELECT\" \
+        L \"$LIST\" \
+        N \"$RENAME\" \
+        D \"$REMOVE\" \
+        R \"$REGISTER\" \
+        - \"---------------------------------\" \
+        C \"$COPY\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "X")
+            mainMENU
+            ;;
+        "S")
+            selectGamepad
+            ;;
+        "L")
+            listGamepads
+            ;;
+        "N")
+            renameGamepad
+            ;;
+        "D")
+            removeGamepad
+            ;;
+        "R")
+            registerGamepad
+            ;;
+        "C")
+            copyGamepad
+            ;;
+        "-")
+            gamepadsMENU
+            ;;
+        *)
+            mainMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# selectGamepad - Select default gamepad
+selectGamepad(){
+    clear
+  
+    if [ "$display_init" = 1 ]; then
+        DISPLAY_MESSAGE="$GAMEPAD_SELECTION"
+    else
+        DISPLAY_MESSAGE="$GAMEPAD_DEFAULT"
+    fi
+
+    makeGamepadMENU # Start generating the menu with the registered gamepads
+    extra_options=""
+    generateHeader # Generate the header of the dialog menu
+    generateListRegisteredGamepads ID_MODEL # Generate gamepad list menu and run the dialog
+    recordGamepadID # Register the gamepad and update SELECTED_GAMEPAD ID and MODEL
+    controllerID # Check the ID and MODEL of the registered controller
+    if [ "$display_init" = 1 ]; then
+        display_init=0  # Disable an indication in the menu to register a gamepad
+        mainMENU
+    else
+        gamepadsMENU
+    fi
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# listGamepads - Display registered gamepads
+listGamepads(){
+    clear
+
+    checkRegisteredGamepads # Check if there are any registered gamepads
+    lines_menu=$((lines_check + 7))
+    echo "-- ID: --   --- MODEL: ---" > "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    echo "" >> "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    cat "$INPUTS"/configs/registered_gamepads.cfg >> "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    dialog --exit-label "$EXIT" --title "$SLOGAN - $MODEL_CUT - $ID" --textbox "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp "$lines_menu" 75
+    rm -f "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    gamepadsMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# registerGamepad - Register a new gamepad
+registerGamepad(){
+    clear
+
+    if [ -z "$(ls "$INPUT_MISTER"/*v3.map 2>/dev/null)" ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$NO_GAMEPAD_REGISTER_1")
+        message_ln2=$(printf "%s" "$NO_GAMEPAD_REGISTER_2")
+        messageDIALOG
+        exitProgram
+    fi
+
+    touch "$tmp_IDs" 2>/dev/null
+    cd "$INPUT_MISTER" ||  exit 1
+    declare -A extracted_ids
+
+    for file in input*v3.map; do
+        if [[ -f "$file" ]]; then
+            id=$(echo "$file" | sed -E 's/.*_([a-f0-9]{4}_[a-f0-9]{4})_v3\.map/\1/' 2>/dev/null)
+            if [[ -n "$id" && -z "${extracted_ids["$id"]}" ]]; then
+                if ! grep -q "^$id " "$INPUTS"/configs/registered_gamepads.cfg; then
+                    extracted_ids["$id"]=1
+                    echo "$id" >> "$tmp_IDs" 2>/dev/null
+                fi
+            fi
+        fi
+    done
+    
+    DIR_TARGET="$tmp_IDs" # DIR_TARGET to the linesArray
+    linesArray # Generate the lines for the menu
+
+    lines_menu=$((counter + 8))
+    MESSAGE_MENU="$MESSAGE_SELECT_GAMEPAD"
+    param_1=67
+    param_2=4
+    extra_options=""
+    generateHeader # Generate the header of the dialog menu
+    DIALOG+="
+X \"$EXIT_MENU\" \\
+- \"--------------------\" \\"
+
+    IDS_LIST="$INPUTS/configs/LIST_CONTROLLER_IDS.txt"
+
+    model=()
+    indice=()
+    print_indice=()
+    for ((i = 1 ; i < counter; i++)); do
+        output=${lines_array[$((i-1))]}
+        search=${output/_/:}
+        name=$(grep -m 1 "$search" "$IDS_LIST" 2>/dev/null)
+        if [[ $? -ne 0 ]]; then
+            model+=("")
+        else    
+            model+=("$(echo "$name" | sed 's/.*"\([^"]*\)".*/\1/' 2>/dev/null)")
+        fi
+        indice+=("$output - ${model[$((i-1))]}")
+        print_indice+=("${indice[$((i-1))]% - }")
+        if [ "$i" -lt $((counter - 1)) ]; then
+            DIALOG+="$i \"${print_indice[$((i-1))]}\" \\"
+        else
+            DIALOG+="$i \"${print_indice[$((i-1))]}\""
+        fi
+    done
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    if [ "$status_message" = 1 ]; then
+        rm -f "$tmp_IDs" 2>/dev/null
+        gamepadsMENU
+    fi 
+
+    case "$choice" in
+        "X")
+            rm -f "$tmp_IDs" 2>/dev/null
+            gamepadsMENU
+            ;;
+        "-")
+            registerGamepad
+            ;;
+        *)
+            ID_CHOICE=$(sed -n "${choice}p" "$tmp_IDs" 2>/dev/null)
+            rm -f "$tmp_IDs" 2>/dev/null
+
+            if grep -q "$ID_CHOICE" "$INPUTS"/configs/registered_gamepads.cfg; then
+                title=$(printf "%s - %s - %s" "$SLOGAN" "$MODEL_CUT" "$ID")
+                message_ln1=$(printf "%s" "$GAMEPAD_ALREADY_REGISTERED")
+                messageDIALOG
+                registerGamepad
+            fi
+
+            title=$(printf "%s" "$CONFIRMATION")
+            message_ln1=$(printf "%s '%s'." "$YOU_HAVE_SELECTED" "${print_indice[$choice-1]}")
+            message_ln2=$(printf "%s" "$CORRECT")
+            yesnoDIALOG
+       
+            if [ "$status_message" = 1 ]; then
+                gamepadsMENU
+            fi
+
+            if [ "${model[$((choice - 1))]}" = "" ]; then
+                title=$(printf "%s" "$ATTENTION")
+                message_ln1=$(printf "%s" "$GAMEPAD_EMPTY")
+                message_ln2=$(printf "%s" "$GAMEPAD_MODEL")
+                inputDIALOG
+
+                if [ "$status_message" = 1 ]; then
+                    gamepadsMENU
+                fi
+  
+                MODEL_CHOICE="$TMP_INPUT"
+                title=$(printf "%s" "$CONFIRMATION")
+                message_ln1=$(printf "%s '%s'?" "$TYPED" "$MODEL_CHOICE")
+                message_ln2=$(printf "%s" "$CORRECT")
+                yesnoDIALOG
+
+                if [ "$status_message" = 1 ]; then
+                    gamepadsMENU
+                fi
+            else
+                MODEL_CHOICE=${model[$choice-1]}
+            fi
+
+            ID_CHOICE_LIST=${ID_CHOICE/_/:}
+            echo "$ID_CHOICE - $MODEL_CHOICE" >> "$INPUTS"/configs/registered_gamepads.cfg 2>/dev/null
+            echo "(\"$ID_CHOICE_LIST\" \"$MODEL_CHOICE\")" >> "$INPUTS"/configs/LIST_CONTROLLER_IDS.txt 2>/dev/null
+            mkdir "$INPUTS"/gamepad-"$ID_CHOICE" 2>/dev/null
+            recordGamepadID # Register the gamepad and update SELECTED_GAMEPAD ID and MODEL
+            cleanRegisteredFile
+            controllerID # Check the ID and MODEL of the registered controller
+            title=$(printf "%s - %s - %s" "$SLOGAN" "$MODEL_CHOICE" "$ID_CHOICE")
+            message_ln1=$(printf "%s" "$GAMEPAD_REGISTERED")
+            messageDIALOG
+            gamepadsMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# renameGamepad - Rename a registered gamepad
+renameGamepad(){
+    clear
+
+    DISPLAY_MESSAGE="$GAMEPAD_SELECTION_RENAME"
+    makeGamepadMENU # Start generating the menu with the registered gamepads
+    extra_options=""
+    generateHeader # Generate the header of the dialog menu
+    generateListRegisteredGamepads ID_MODEL # Generate gamepad list menu and run the dialog
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'?" "$WANT_RENAME" "$MODEL_CHOICE")
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        gamepadsMENU
+    fi
+
+    title=$(printf "%s" "$RENAME_GAMEPAD")
+    message_ln1=$(printf "%s '%s':" "$GAMEPAD_ENTRY_NAME" "$MODEL_CHOICE") 
+    inputDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        gamepadsMENU
+    fi
+
+    NEW_MODEL_CHOICE="$TMP_INPUT"
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'." "$TYPED" "$NEW_MODEL_CHOICE")
+    message_ln2=$(printf "%s" "$GAMEPAD_RENAME_CONFIRM")
+    yesnoDIALOG  
+
+    if [ "$status_message" = 1 ]; then
+        gamepadsMENU
+    fi
+  
+    REPLACE_STRING_1=$(printf "%s - %s" "$ID_CHOICE" "$NEW_MODEL_CHOICE")
+    ID_CHOICE_LIST=${ID_CHOICE/_/:}
+    REPLACE_STRING_2=$(printf "(\"%s\" \"%s\")" "$ID_CHOICE_LIST" "$NEW_MODEL_CHOICE")
+    sed -i "/$ID_CHOICE/c\\$REPLACE_STRING_1" "$INPUTS"/configs/registered_gamepads.cfg 2>/dev/null
+    sed -i "/$ID_CHOICE_LIST/c\\$REPLACE_STRING_2" "$INPUTS"/configs/LIST_CONTROLLER_IDS.txt 2>/dev/null
+
+    if [ "$choice" = 1 ]; then
+        echo "$ID_CHOICE" > "$INPUTS"/configs/selected_gamepad_ID.cfg 2>/dev/null
+        echo "$NEW_MODEL_CHOICE" > "$INPUTS"/configs/selected_gamepad_MODEL.cfg 2>/dev/null
+    fi
+
+    controllerID # Check the ID and MODEL of the registered controller
+    title=$(printf "%s" "$RENAME_GAMEPAD")
+    message_ln1=$(printf "%s" "$GAMEPAD_RENAMED")
+    messageDIALOG
+    gamepadsMENU  
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# removeGamepad - Remove a registered gamepad
+removeGamepad(){
+    clear
+
+    DISPLAY_MESSAGE="$MESSAGE_REMOVE_GAMEPAD"
+    makeGamepadMENU # Start generating the menu with the registered gamepads
+    extra_options=""
+    generateHeader # Generate the header of the dialog menu
+    generateListRegisteredGamepads # Generate gamepad list menu and run the dialog
+    gamepad_choice=${lines_array[$((choice - 1))]}
+    ID_CHOICE=$(echo "$gamepad_choice" | cut -c1-9 2>/dev/null)
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'?" "$WANT_REMOVE" "$gamepad_choice")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        gamepadsMENU
+    fi
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s" "$PRESERVE_PROFILES_1")
+    message_ln2=$(printf "%s" "$PRESERVE_PROFILES_2")        
+    yesnoDIALOG
+
+    if [ "$status_message" = 1 ]; then
+        DELETE_FILES=1
+    else
+        DELETE_FILES=0
+    fi
+
+    TEST=$(cat "$INPUTS/configs/selected_gamepad_ID.cfg" 2>/dev/null)
+    sed -i "/$ID_CHOICE/d" "$INPUTS"/configs/registered_gamepads.cfg 2>/dev/null
+    cleanRegisteredFile
+
+    if [ "$TEST" = "$ID_CHOICE" ]; then
+        echo "" > "$INPUTS"/configs/selected_gamepad_ID.cfg 2>/dev/null
+        if grep -q "_" "$INPUTS/configs/registered_gamepads.cfg"; then
+            echo "$SELECT_A_GAMEPAD" > "$INPUTS"/configs/selected_gamepad_MODEL.cfg 2>/dev/null
+        else
+            echo "$NO_GAMEPAD" > "$INPUTS"/configs/selected_gamepad_MODEL.cfg 2>/dev/null
+        fi
+    fi
+
+    controllerID # Check the ID and MODEL of the registered controller
+
+    if [ "$DELETE_FILES" = 1 ]; then
+        if [ -z "$INPUTS" ] || [ "$INPUTS" == "/" ] || [ -z "$ID_CHOICE" ]; then
+            gamepadsMENU
+        fi    
+        rm -rf "$INPUTS"/gamepad-"$ID_CHOICE" 2>/dev/null
+        title=$(printf "%s" "$GAMEPAD_REMOVED")
+        message_ln1=$(printf "%s" "$DELETED_MESSAGE")
+        messageDIALOG
+    else
+        title=$(printf "%s" "$GAMEPAD_REMOVED")
+        message_ln1=$(printf "%s" "$PRESERVE_MESSAGE_1")
+        message_ln2=$(printf "%s" "$PRESERVE_MESSAGE_2")        
+        messageDIALOG
+    fi
+
+   gamepadsMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# copyGamepad - Copy all settings from one gamepad to another
+copyGamepad(){
+    clear
+
+    countGamepads
+    if [ "$lines_check" -lt 2 ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$ONLY_ONE_COPY_1")
+        message_ln2=$(printf "%s" "$ONLY_ONE_COPY_2")
+        messageDIALOG
+        gamepadsMENU
+    fi 
+
+    DISPLAY_MESSAGE="$MESSAGE_COPY_GAMEPAD"
+    makeGamepadMENU # Start generating the menu with the registered gamepads
+    extra_options=""
+    generateHeader # Generate the header of the dialog menu
+
+    DIR_TARGET="$INPUTS"/configs/registered_gamepads.cfg # DIR_TARGET to the linesArray
+    linesArray # Generate the lines for the menu
+
+    GAMEPADS_REGISTEREDS=""
+    for ((i = 1 ; i < counter; i++)); do
+        output=${lines_array[$((i-1))]}
+        if [ "$i" -lt $((counter - 1)) ]; then
+            GAMEPADS_REGISTEREDS+="$i \"$output\" \\"
+        else
+            GAMEPADS_REGISTEREDS+="$i \"$output\""
+        fi
+    done
+    DIALOG+="$GAMEPADS_REGISTEREDS"
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    if [ "$status_message" = 1 ]; then
+        gamepadsMENU
+    fi
+
+    gamepad_choice_1=${lines_array[$((choice - 1))]}
+    ID_CHOICE_1=$(echo "$gamepad_choice_1" | cut -c1-9 2>/dev/null)
+    selectSecondGamepad(){
+        DISPLAY_MESSAGE="$MESSAGE_DESTINY_GAMEPAD"
+        makeGamepadMENU # Start generating the menu with the registered gamepads
+        extra_options=""
+        generateHeader # Generate the header of the dialog menu
+        DIALOG+="${GAMEPADS_REGISTEREDS//${lines_array[$((choice-1))]}/ <<< $SELECTED_COPY >>>}"
+        runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+    
+        if [ "$status_message" = 1 ]; then
+            gamepadsMENU
+        fi
+
+        gamepad_choice_2=${lines_array[$((choice - 1))]}
+        ID_CHOICE_2=$(echo "$gamepad_choice_2" | cut -c1-9 2>/dev/null)
+
+        if [ "$gamepad_choice_2" = "$gamepad_choice_1" ]; then
+            selectSecondGamepad 
+        fi
+    }
+    
+    selectSecondGamepad
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'" "$WANT_COPY_1" "$gamepad_choice_1")
+    message_ln2=$(printf "%s '%s'?" "$WANT_COPY_2" "$gamepad_choice_2")
+    yesnoDIALOG
+
+    if ls -d /"$INPUTS"/gamepad-"$ID_CHOICE_2" &>/dev/null; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s '%s'" "$COPY_OVERWRITE_1" "$gamepad_choice_2")
+        message_ln2=$(printf "%s" "$COPY_OVERWRITE_2")
+        yesnoDIALOG
+        if [ "$status_message" = 1 ]; then
+            gamepadsMENU
+        else
+            if [ -d "$INPUTS"/gamepad-"$ID_CHOICE_2" ]; then
+                rm -rf /"$INPUTS"/gamepad-"$ID_CHOICE_2"/* 2>/dev/null
+            else
+                gamepadsMENU
+            fi
+        fi
+    else
+        mkdir /"$INPUTS"/gamepad-"$ID_CHOICE_2" 2>/dev/null
+    fi
+
+    for cores_dir in "$INPUTS"/gamepad-"$ID_CHOICE_1"/*"$ID_CHOICE_1"; do
+        if [ -d "$cores_dir" ]; then
+            new_cores_dir="${cores_dir/$ID_CHOICE_1/$ID_CHOICE_2}"
+            cp -r "$cores_dir" "$new_cores_dir" 2>/dev/null
+        
+            for cores_dir_2 in "$INPUTS"/gamepad-"$ID_CHOICE_2"/*"$ID_CHOICE_1"; do
+                new_cores_dir_2="${cores_dir_2/$ID_CHOICE_1/$ID_CHOICE_2}"
+                mv "$cores_dir_2" "$new_cores_dir_2" 2>/dev/null
+            done
+
+            for files_cores in "$new_cores_dir_2"/*; do
+                if [[ -f "$files_cores" && "$files_cores" == *$ID_CHOICE_1* ]]; then
+                    new_files_cores="${files_cores/$ID_CHOICE_1/$ID_CHOICE_2}"
+                    mv "$files_cores" "$new_files_cores" 2>/dev/null
+                fi
+            done
+         fi
+    done
+
+    title=$(printf "%s" "$COPY_FINISHED")
+    message_ln1=$(printf "%s" "$COPY_COMPLETED")
+    messageDIALOG
+
+    gamepadsMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# coreMENU - Show menu to access 'SLOTS' of the selected 'Core'
+coreMENU(){
+    clear
+
+    counter=$(find "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID" -type f -name "LAYOUT_*" | wc -l 2>/dev/null)
+
+    if [ "$choice" = "" ]; then
+        mainMENU
+    fi
+
+    if [ "$counter" = 0 ] && [ "$tips_flag" = 1 ]; then
+        SAVE="$SAVE_TIPS"
+    else
+        SAVE="$SAVE_DEFAULT"
+    fi
+    if [ "$tips_flag" = 0 ] && [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games ]; then
+        rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games 2>/dev/null
+    fi
+    if [ "$tips_flag" = 0 ] && [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts ]; then
+        rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts 2>/dev/null
+    fi
+    if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games ] && [ "$tips_flag" = 1 ];then
+        EDIT_GAMES="$EDIT_GAMES_TIPS"    
+    else
+        EDIT_GAMES="$EDIT_GAMES_DEFAULT"    
+    fi
+    if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts ] && [ "$tips_flag" = 1 ];then
+        EDIT_LAYOUTS="$EDIT_LAYOUTS_TIPS"
+    else
+        EDIT_LAYOUTS="$EDIT_LAYOUTS_DEFAULT"
+    fi
+
+    SLOGAN_OR_CORE="$CORE"
+    CHECK_1_SLOT=1 # Enables the check for 1 SLOT only
+    TYPE=$(cat "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/TYPE_"$ID".cfg 2>/dev/null)
+
+    # Display a message if the 'joystick' and/or 'Buttons/Key remap' configurations
+    # from MiSTer are not found
+    if [ "$TYPE" = "v3" ] && [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map ]; then
+            EXT="no_v3"
+            alertMisterDIALOG
+    fi
+    if [ "$TYPE" = "jk" ] && [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map ]; then 
+            EXT="no_jk"
+            alertMisterDIALOG
+    fi
+    
+    if [ "$TYPE" = "jk_v3" ]; then
+        if [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map ] && \
+                [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map ]; then
+            EXT="no_jk_v3"
+            alertMisterDIALOG
+        elif [ -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map ] && \
+                [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map ]; then
+            EXT="only_v3"
+            alertMisterDIALOG
+        elif [ ! -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map ] && \
+                [ -f "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map ]; then
+            EXT="only_jk"
+            alertMisterDIALOG
+        fi
+    fi
+
+    if [ "$TYPE" = "v3" ]; then
+        TYPE_DISPLAY="$GAMEPAD"
+    elif [ "$TYPE" = "jk" ]; then
+        TYPE_DISPLAY="$KEYBOARD"
+    else
+        TYPE_DISPLAY="$MIXED"
+    fi
+
+    if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg ]; then
+        CURRENT=$(cat "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null)
+    else
+        CURRENT="X"
+        echo "X" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+    fi
+
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout \
+        --title \"$CORE - $TYPE_CONTROL:$TYPE_DISPLAY - $CURRENT_INFO:[$CURRENT]\" \
+        --menu \" $SELECT_OPTIONS_CORE\" 24 67 4 \
+        X \"$EXIT_TO_MENU\" \
+        - \"-----------------------------\" \
+        S \"$LOAD\" \
+        G \"$GAMES\" \
+        V \"$LAYOUTS\" \
+        - \"-----------------------------\" \
+        N \"$SAVE\" \
+        L \"$EDIT_GAMES\" \
+        E \"$EDIT_LAYOUTS\" \
+        - \"-----------------------------\" \
+        M \"$MOVE\" \
+        C \"$SWITCH\" \
+        K \"$CLONE\" \
+        R \"$OVERWRITE\" \
+        D \"$DELETE\" \
+        - \"-----------------------------\" \
+        P \"$NOTES\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case $choice in
+        "S") loadSLOT ;;
+        "G") gamesList ;;
+        "V") layoutsList ;;
+        "N") saveSLOT ;;
+        "L") gamesEdit ;;
+        "E") layoutsEdit ;;
+        "M") moveSLOT ;;
+        "C") switchSLOT ;;
+        "K") cloneSLOT ;;
+        "R") overwriteSLOT ;;
+        "D") deleteSLOT ;;
+        "P") notesMENU ;;
+        "X" | "") mainMENU ;;
+        "-") coreMENU ;;
+        *) mainMENU ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# loadSLOT - Select 'SLOT' as default
+loadSLOT(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    MESSAGE_MENU="$MESSAGE_SELECT '$CORE'"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    generateHeaderOnDisk # Generate the header of the dialog menu on disk
+    generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+    prepareMENU # Delete the temporary files and store the selection
+     case "$choice" in
+        "-")
+            loadSLOT
+            ;;
+        "")
+            coreMENU
+            ;;
+        *)
+            title=$(printf "%s" "$CONFIRMATION")
+            message_ln1=$(printf "%s '%s'." "$PROFILE_CONFIRM" "$choice")
+            message_ln2=$(printf "%s %s" "$MESSAGE_SELECT_YESNO" "$CORRECT")
+            yesnoDIALOG
+            if [ "$status_message" = 0 ]; then 
+                if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+                    cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$choice".map \
+                        "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map 2>/dev/null
+                fi
+                if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+                cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$choice".map \
+                    "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map 2>/dev/null
+                fi
+                echo "$choice" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+                title=$(printf "%s - %s - %s:%s" "$CORE" "$MODEL" "$TYPE_CONTROL" "$TYPE_DISPLAY")
+                message_ln1=$(printf "%s" "$MESSAGE_SELECT_CONFIRM_A")
+                message_ln2=$(printf "%s '%s'." "$MESSAGE_SELECT_CONFIRM_B" "$CORE")
+                messageDIALOG
+                coreMENU
+            else
+                coreMENU
+            fi
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# gamesList - Show the game list for each 'SLOT'
+gamesList(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+
+    if [ -f "$tmp_message" ]; then
+        rm -f "$tmp_message" 2>/dev/null
+    fi
+
+    touch "$tmp_message" 2>/dev/null
+    counter=$(find "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/ -name "GAMES_${ID}_*" -type f 2>/dev/null | wc -l)
+
+    for ((i=1 ; i <= counter; i++)); do
+        while IFS= read -r line; do
+            eval "OUTPUT=\"\$line\""
+            echo "$OUTPUT - $i"  >> "$tmp_message" 2>/dev/null
+        done < "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$i".cfg
+    done
+
+    touch "$tmp_order" 2>/dev/null
+    sort "$tmp_message" >> "$tmp_order" 2>/dev/null
+    echo "" > "$tmp_message" 2>/dev/null
+    cat "$tmp_order" >> "$tmp_message" 2>/dev/null
+    rm -f "$tmp_order" 2>/dev/null
+    lines_text=$(wc -l <"$tmp_message" 2>/dev/null)
+    lines=$((lines_text + 5))
+
+    if [ "$lines" -gt 28 ]; then
+        lines=28
+    fi
+
+    title="$(printf "%s - %s - %s" "$SLOGAN_OR_CORE" "$MODEL_CUT" "$ID")"
+    dialog  --exit-label "$EXIT" --title "$title" --textbox "$tmp_message" "$lines" 70
+    rm -f "$tmp_message" 2>/dev/null
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# layoutsList - Show the button configuration of each 'SLOT'
+layoutsList(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    
+    if [ -f "$tmp_message" ]; then
+        rm -f "$tmp_message" 2>/dev/null
+    fi
+
+    {
+    echo ""
+    echo "Lyts ← ↓ ↑ → A B C X Y Z L R L2 R2 L3 R3 STR SEL        $COMMENTS"
+    echo "---- ------------------------------------------- ---------------------"
+    } > "$tmp_message" 2>/dev/null
+
+    for ((i=1; i <= counter; i++)); do
+        layouts_lines=$(< "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$i".cfg)
+        indice=$(printf "%2d" $i)
+        echo "$indice)  $layouts_lines" >> "$tmp_message" 2>/dev/null
+    done
+
+    lines=$((counter + 8))
+    
+    if [ "$lines" -gt 28 ]; then
+        lines=28
+    fi
+
+    title="$(printf "%s - %s - %s" "$SLOGAN_OR_CORE" "$MODEL_CUT" "$ID")"
+    dialog --exit-label "$EXIT" --title "$title" --textbox "$tmp_message" "$lines" 74
+    rm -f "$tmp_message" 2>/dev/null
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# gamesEdit - Edit game list of each 'SLOT'
+gamesEdit(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    MESSAGE_MENU="$GAME_EDIT"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    generateHeaderOnDisk # Generate the header of the dialog menu on disk
+    generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+    prepareMENU # Delete the temporary files and store the selection
+
+    case "$choice" in
+        "-")
+            gamesEdit
+            ;;
+        "")
+            coreMENU
+            ;;
+        *)
+            if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg ]; then
+                cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".tmp 2>/dev/null
+                if ! dialog --ok-label "$OK" --cancel-label "$CANCEL" --title "$FILE_EDITING - $CORE - $GAMES_LIST '$choice'" --editbox "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".tmp 20 60 \
+                    2> "$tmp_dialog"; then
+                    rm -f "$tmp_dialog" 2>/dev/null
+                    rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".tmp 2>/dev/null
+                    coreMENU
+                fi
+                sed -i '/^[[:space:]]*$/d' "$tmp_dialog" 2>/dev/null
+                cp "$tmp_dialog" "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".cfg 2>/dev/null
+                rm -f "$tmp_dialog" 2>/dev/null
+                rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".tmp 2>/dev/null
+                    if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games ]; then
+                        rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_games 2>/dev/null
+                    fi
+                coreMENU
+            else
+                title=$(printf "%s - %s %s" "$SLOGAN" "$MENU_PROFILE" "$MODEL")
+                message_ln1=$(printf "%s" "$SLOTS_NOT_FOUND")
+                messageDIALOG
+                coreMENU
+            fi
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# CREATE - Create new 'SLOT'
+saveSLOT(){
+    clear
+    
+    title="$(printf "%s - %s - %s" "$SLOGAN_OR_CORE" "$MODEL_CUT" "$ID")"
+    message_ln1=$(printf "%s '%s'?" "$NEW_PROFILE" "$CORE")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+    
+    if [ "$status_message" = 1 ]; then
+        coreMENU
+    fi
+    
+    if [ "$TYPE" = "v3" ]; then
+        TYPE_TEST="v3"
+    else
+        TYPE_TEST="jk"
+    fi
+    
+    if test -n "$(ls "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_"$TYPE_TEST"-CONFIG_* 2>/dev/null)"; then
+        counter=$(find "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/ -name "${CORE}_input_${ID}_${TYPE_TEST}-CONFIG_*" -type f 2>/dev/null | wc -l)
+        ((counter++))
+        if test -n "$(ls "$INPUT_MISTER"/"$CORE"_input_"$ID"_"$TYPE_TEST".map 2>/dev/null)"; then
+            createNewSLOT # Copy the MiSTer configurations to a new SLOT
+        else
+            messageNoConfigurationFound # Message if a MiSTer configuration is not found
+        fi
+    else
+        counter=1
+        if test -n "$(ls "$INPUT_MISTER"/"$CORE"_input_"$ID"_"$TYPE_TEST".map 2>/dev/null)"; then
+            createNewSLOT # Copy the MiSTer configurations to a new SLOT
+        else
+            messageNoConfigurationFound # Message if a MiSTer configuration is not found
+        fi
+    fi
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# EDIT - Edit button visualization of each 'SLOT'
+layoutsEdit(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    MESSAGE_MENU="$LAYOUT_EDIT"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    generateHeaderOnDisk # Generate the header of the dialog menu on disk
+    generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+    prepareMENU # Delete the temporary files and store the selection
+
+    case "$choice" in
+        "-")
+            layoutsEdit
+            ;;
+        "")
+            coreMENU
+            ;;
+        *)
+            if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg ]; then
+                cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".tmp 2>/dev/null
+                echo -e "← ↓ ↑ → \n← ↓ ↑ → A B C X Y Z L R L2 R2 L3 R3 STR SEL |----- $COMMENTS ------|\n\n$MESSAGE_EDIT_A\n$MESSAGE_EDIT_B" >> "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".tmp 2>/dev/null
+                if dialog --ok-label "$OK" --cancel-label "$CANCEL" --title "$FILE_EDITING - $CORE - $BUTTON_MAP '$choice'" --editbox "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".tmp 20 72 2> "$tmp_dialog"; then
+                    cp "$tmp_dialog" "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg 2>/dev/null
+                    rm -f "$tmp_dialog" "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".tmp 2>/dev/null
+                    sed -i '2,$d' "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg 2>/dev/null
+                    if [ -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts ]; then
+                        rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/show_tips_edit_layouts 2>/dev/null
+                    fi
+                    coreMENU
+                else
+                    rm -f "$tmp_dialog" "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".tmp 2>/dev/null
+                    coreMENU
+                fi
+            else
+                title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+                message_ln1=$(printf "%s" "$SLOTS_NOT_FOUND")
+                messageDIALOG
+                coreMENU
+            fi
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# deleteSLOT - Delete a 'SLOT'
+deleteSLOT(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    MESSAGE_MENU="$DELETE_PROFILE"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    generateHeaderOnDisk # Generate the header of the dialog menu on disk
+    generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+    prepareMENU # Delete the temporary files and store the selection
+
+    case "$choice" in
+        "-")
+            loadSLOT
+            ;;
+        "")
+            coreMENU
+            ;;
+        *)
+            title=$(printf "%s" "$CONFIRMATION")
+            message_ln1=$(printf "%s '%s'?" "$DELETE_WANT" "$choice")
+            message_ln2=$(printf "%s" "$CORRECT")
+            yesnoDIALOG
+
+            if [ "$status_message" = 1 ]; then
+                coreMENU
+            fi
+
+            rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg 2>/dev/null
+            rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".cfg 2>/dev/null
+            rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$choice".map 2>/dev/null
+
+            if [ "$TYPE" = "jk" ]; then
+                rm -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$choice".map 2>/dev/null
+            fi
+            first_profile="$choice"
+            inc=1
+            condition="i < counter"
+            reorganizeProfilesOrder # Reorganize the order of the PROFILES
+            
+            if [ "$choice" = "$CURRENT" ]; then  # Update Current Profile Position
+                echo "X" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+                CURRENT="X"
+            elif [ "$choice" -lt "$CURRENT" ]; then
+                UPDATE_CURRENT=$((CURRENT - 1 ))
+                echo "$UPDATE_CURRENT" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+                CURRENT="$UPDATE_CURRENT"
+            fi
+
+            title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+            message_ln1=$(printf "%s '%s' %s" "$DELETE_MESSAGE_1" "$choice" "$DELETE_MESSAGE_2")
+            messageDIALOG
+            coreMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# moveSLOT - Move a 'SLOT'
+moveSLOT(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    generateLayoutsMENU # Generate the menu with the LAYOUTS (Button Map)
+    WINDOW_TITLE="$MOVE"
+    MESSAGE_MENU="$FIRST_PROFILE_MOVE"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    selectFirst(){
+        generateHeaderOnDisk # Generate the header of the dialog menu on disk
+        generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+        prepareMENU # Delete the temporary files and store the selection
+        first_profile="$choice"
+        if [ "$choice" = "-" ]; then
+            selectFirst
+        fi
+    }
+    selectFirst
+    MESSAGE_MENU="$SECOND_PROFILE_MOVE"
+    selectSecond(){
+        generateHeaderOnDisk # Generate the header of the dialog menu on disk
+        generateLayoutExcludeInputMENU # Generate menu excluding selected LAYOUT
+        prepareMENU # Delete the temporary files and store the selection
+        destination_profile="$choice"
+        if [ "$choice" = "-" ]; then
+            selectSecond
+        fi
+        }
+    selectSecond
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s' %s '%s'?" "$WISHES_MOVE" "$first_profile" "$TO_POSITION" "$destination_profile")
+    if [ "$counter" -gt 2 ]; then
+        message_ln2=$(printf "%s %s" "$WISHES_MOVE_2" "$CORRECT")
+    fi
+    yesnoDIALOG
+
+    if [ "$status_message" = 0 ]; then
+        file_1="$first_profile"
+        file_2="TEMP"
+        moveProfile # Move the Profiles (Buttons Map)
+        if [ "$first_profile" -gt "$destination_profile" ]; then
+            inc=-1
+            condition="i > destination_profile"
+            reorganizeProfilesOrder # Reorganize the order of the PROFILES
+        else
+            inc=1
+            condition="i < destination_profile"
+            reorganizeProfilesOrder # Reorganize the order of the PROFILES
+        fi
+        file_1="TEMP"
+        file_2="$destination_profile"
+        moveProfile # Move the Profiles (Buttons Map)
+
+        UPDATE_CURRENT="$CURRENT"  # Update Current Profile Position
+        if [ "$destination_profile" = "$CURRENT" ]; then
+            if [ "$first_profile" -gt "$destination_profile" ]; then
+                UPDATE_CURRENT=$((CURRENT + 1))
+            else
+                UPDATE_CURRENT=$((CURRENT -1 ))
+            fi
+        elif [ "$destination_profile" -lt "$CURRENT" ] && [ "$first_profile" -gt "$CURRENT" ]; then
+            UPDATE_CURRENT=$((CURRENT + 1))
+        elif [ "$destination_profile" -gt "$CURRENT" ] && [ "$first_profile" -lt "$CURRENT" ]; then
+            UPDATE_CURRENT=$((CURRENT -1 ))
+        fi
+        echo "$UPDATE_CURRENT" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+        CURRENT="$UPDATE_CURRENT"
+
+        title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+        message_ln1=$(printf "%s." "$MOVE_MESSAGE")
+        messageDIALOG
+    fi
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# switchSLOT - Swap two 'SLOTS'
+switchSLOT(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    generateLayoutsMENU # Generate the menu with the LAYOUTS (Button Map)
+    WINDOW_TITLE="$SWITCH"
+    MESSAGE_MENU="$FIRST_PROFILE_SWITCH"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    selectFirst(){
+        generateHeaderOnDisk # Generate the header of the dialog menu on disk
+        generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+        prepareMENU # Delete the temporary files and store the selection
+        first_profile="$choice"
+        if [ "$choice" = "-" ]; then
+            selectFirst
+        fi
+    }
+    selectFirst
+
+    MESSAGE_MENU="$SECOND_PROFILE_SWITCH"
+    selectSecond(){
+        generateHeaderOnDisk # Generate the header of the dialog menu on disk
+        generateLayoutExcludeInputMENU # Generate menu excluding selected LAYOUT
+        prepareMENU # Delete the temporary files and store the selection
+        second_profile="$choice"
+        if [ "$choice" = "-" ]; then
+            selectSecond
+        fi
+        }
+    selectSecond
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s' %s '%s'?" "$WISHES_SWITCH" "$first_profile" "$AND" "$second_profile")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+
+    destination_profile="$second_profile"
+
+    if [ "$status_message" = 0 ]; then
+        file_1="$first_profile"
+        file_2="TEMP"
+        moveProfile # Move the Profiles (Buttons Map)
+        file_1="$second_profile"
+        file_2="$first_profile"
+        moveProfile     # Move the Profiles (Buttons Map)    
+        file_1="TEMP"
+        file_2="$second_profile"
+        moveProfile # Move the Profiles (Buttons Map)
+
+        UPDATE_CURRENT="$CURRENT" # Update Current Profile Position
+        if [ "$first_profile" = "$CURRENT" ]; then
+            UPDATE_CURRENT="$second_profile"
+        elif [ "$second_profile" = "$CURRENT" ]; then
+            UPDATE_CURRENT="$first_profile"
+        fi
+        echo "$UPDATE_CURRENT" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+        CURRENT="$UPDATE_CURRENT"
+
+        title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+        message_ln1=$(printf "%s" "$SWITCH_MESSAGE")
+        messageDIALOG
+    fi
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# overwriteSLOT - Overwrite 'SLOT'
+overwriteSLOT(){
+    clear
+
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    WINDOW_TITLE="$OVERWRITE"
+    CHECK_1_SLOT=0 # Disables the check for 1 SLOT only
+    generateLayoutsMENU # Generate the menu with the Profiles (Button Map)
+    overwriteProfile(){
+        if [ "$counter" = 1 ]; then
+            title=$(printf "%s - %s" "$CORE" "$OVERWRITE_MENU")
+            message_ln1=$(printf "%s %s." "$OVERWRITE_ONLY_ONE_1" "$CORE")
+            message_ln2=$(printf "%s" "$OVERWRITE_ONLY_ONE_2")
+            yesnoDIALOG
+            if [ "$status_message" = 1 ]; then
+                coreMENU
+            fi
+            overwrite_profile="$counter"
+        else
+            WINDOW_TITLE="$OVERWRITE"
+            MESSAGE_MENU="$OVERWRITE_PROFILE_MESSAGE"
+            param_1=76
+            param_2=4
+            lines_menu=$((counter + 8))
+            extra_options=""
+            selectSLOT(){
+                generateHeaderOnDisk # Generate the header of the dialog menu on disk
+                generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+                prepareMENU # Delete the temporary files and store the selection
+                overwrite_profile="$choice"
+                if [ "$choice" = "-" ]; then
+                    selectSLOT
+                fi
+            }
+            selectSLOT
+        fi
+       
+        if [ "$overwrite_profile" -lt 1 ] || [ "$overwrite_profile" -gt "$counter" ] || \
+               [ -z "$overwrite_profile" ]; then
+            overwriteProfile
+        fi    
+    }
+
+    overwriteProfile
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s '%s'" "$WISHES_OVERWRITE" "$overwrite_profile")
+    message_ln2=$(printf "%s" "$CORRECT")
+    yesnoDIALOG
+
+    if [ "$status_message" = 0 ]; then
+        if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+            cp "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map \
+                "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$overwrite_profile".map 2>/dev/null
+        fi
+        if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+            cp "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map \
+                "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$overwrite_profile".map 2>/dev/null
+        fi
+        echo "$overwrite_profile" > "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/SELECTED_"$ID".cfg 2>/dev/null
+         title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+        message_ln1=$(printf "%s '%s'." "$OVERWRITE_MESSAGE" "$overwrite_profile")
+        messageDIALOG
+        coreMENU
+    else
+        coreMENU
+    fi
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# cloneSLOT - Clone 'SLOT'
+cloneSLOT(){
+    clear
+ 
+    layoutTEST # Check if there are LAYOUT files in the Core folder
+    DESTINATION=$((counter + 1))
+    MESSAGE_MENU="$CLONE_PROFILE_MESSAGE"
+    param_1=76
+    param_2=4
+    lines_menu=$((counter + 8))
+    extra_options=""
+    generateHeaderOnDisk # Generate the header of the dialog menu on disk
+    generateLayoutsOnDisk # Generate the LAYOUT menu on disk (Button Map)
+
+    prepareMENU # Delete the temporary files and store the selection
+
+    case "$choice" in
+        "-")
+            cloneSLOT
+            ;;
+        "")
+            coreMENU
+            ;;
+        *)
+            title=$(printf "%s" "$CONFIRMATION")
+            message_ln1=$(printf "%s '%s' %s '%s'?" "$CLONE_CONFIRM_1" "$choice" "$CLONE_CONFIRM_2" "$DESTINATION")
+            message_ln2=$(printf "%s" "$CORRECT")
+            yesnoDIALOG
+            if [ "$status_message" = 1 ]; then
+                coreMENU
+            fi
+
+        if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+            cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$choice".map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$DESTINATION".map 2>/dev/null
+        fi
+        if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+            cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$choice".map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$DESTINATION".map 2>/dev/null
+        fi
+        cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$choice".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$DESTINATION".cfg 2>/dev/null
+        cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$choice".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$DESTINATION".cfg 2>/dev/null
+            ;;
+    esac
+
+    title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+    message_ln1=$(printf "%s '%s' %s '%s'" "$CLONE_CONFIRMED_1" "$choice" "$CLONE_CONFIRMED_2" "$DESTINATION")
+    messageDIALOG
+    coreMENU
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# notesMENU - A page to store 'Core' notes
+notesMENU(){
+    clear
+
+    if [ ! -f "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/NOTES_"$ID".txt ]; then
+        touch "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/NOTES_"$ID".txt 2>/dev/null
+    fi
+
+    DIALOG="dialog --ok-label \"$OK\" --clear --no-cancel --no-tags --stdout\
+        --title \"$CORE - $TYPE_CONTROL:$TYPE_DISPLAY - $CURRENT_INFO:[$CURRENT]\" \
+        --menu \" $NOTES_TITLE - $SELECT_OPTIONS\" 10 70 4 \
+        V \"$READ_NOTES\" \
+        E \"$EDIT_NOTES\" \
+        X \"$EXIT_MENU\""
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+    case "$choice" in
+        "X")
+            coreMENU
+            ;;
+        "V")
+            dialog --exit-label "$EXIT" --title "$CORE - $TYPE_DISPLAY - $NOTES_TITLE" \
+                   --textbox "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/NOTES_"$ID".txt 20 60
+            notesMENU
+            ;;
+        "E")
+            cp "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/NOTES_"$ID".txt "$INPUTS"/tmp/NOTES_"$ID".tmp 2>/dev/null
+            if ! dialog --ok-label "$OK" --cancel-label "$CANCEL" --title "$CORE - $TYPE_DISPLAY - $NOTES_TITLE" \
+                   --editbox "$INPUTS"/tmp/NOTES_"$ID".tmp 20 60 2> "$tmp_dialog"; then
+                rm -f "$tmp_dialog" "$INPUTS"/tmp/NOTES_"$ID".tmp 2>/dev/null
+                notesMENU
+            else
+                cp "$tmp_dialog" "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/NOTES_"$ID".txt 2>/dev/null
+                rm -f "$INPUTS"/tmp/NOTES_"$ID".tmp "$tmp_dialog" 2>/dev/null
+                notesMENU
+            fi
+            ;;
+        *)
+            notesMENU
+            ;;
+    esac
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# SECONDARY FUNCTIONS - Shared secondary functions in this script                           #
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Script executed on first launch to select language and visual help option
+firstRUN(){
+
+    setFlags(){
+        sed -i "s/^tips=[^ ]*/tips=$tips_status/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+        sed -i "s/^help_tips=[^ ]*/help_tips=$tips_status/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+        tips_flag="$tips_status" # Flag that enables help tips next to the menus
+
+    }
+
+    if [ "$first_run" = 1 ]; then
+        DIALOG="dialog --clear --no-cancel --no-tags --stdout \
+            --title \"$SLOGAN\" \
+            --menu \" $SELECT_LANGUAGE\" 9 35 4 \
+            E \"$EN\" \
+            P \"$PT"\"
+    
+        runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+        case $choice in
+            "E") 
+                sed -i "s/^language=[^ ]*/language=en/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+                updateDictionary # Update the language and the messages displayed in the Menus
+                ;;
+            "P") 
+                sed -i "s/^language=[^ ]*/language=pt/" "$INPUTS"/configs/gcm.cfg 2>/dev/null
+                updateDictionary # Update the language and the messages displayed in the Menus
+                ;;
+        esac
+
+        clear
+        DIALOG="dialog --clear --no-cancel --no-tags --stdout\
+            --title \"$SLOGAN - $MODEL_CUT - $ID\" \
+            --menu \"$TIPS_MENU:\" 9 35 4 \
+            A \"$ACTIVE_TIPS\" \
+            D \"$DEACTIVE_TIPS\""
+
+        runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+
+        case "$choice" in
+            "A")
+                tips_status=1
+                setFlags
+                ;;
+            "D")
+                tips_status=0
+                setFlags
+                ;;
+        esac
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Check the ID and MODEL of the registered controller
+controllerID(){
+    ID=$(cat "$INPUTS/configs/selected_gamepad_ID.cfg" 2>/dev/null)
+    MODEL=$(cat "$INPUTS/configs/selected_gamepad_MODEL.cfg" 2>/dev/null)
+    MODEL_CUT=$(echo "$MODEL" | cut -c1-28 2>/dev/null)
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Tips flag verify
+tipsFlags(){
+    SHOW_RETURN_TIPS=0 # Disable the comment next to the MENU button
+    counter=$(find "$INPUTS"/gamepad-"$ID" -mindepth 1 -type d -name "*-$ID" | sed "s|-$ID||g" | sed "s|$INPUTS/gamepad-$ID/||g" | wc -l 2>/dev/null)
+
+    if [ "$counter" = 0 ] && [ "$tips_flag" = 1 ]; then
+        ADD="$ADD_TIPS"
+        VIEW="$VIEW_TIPS" 
+        MESSAGE_SELECT_CORE="$MESSAGE_SELECT_CORE_TIPS"
+    else
+        ADD="$ADD_DEFAULT"
+        VIEW="$VIEW_DEFAULT" 
+        MESSAGE_SELECT_CORE="$MESSAGE_SELECT_CORE_DEFAULT"
+    fi
+
+    if [ "$lines_check" = 0 ] && [ "$tips_flag" = 1 ]; then
+        GAMEPADS="$GAMEPADS_TIPS"
+    else
+        GAMEPADS="$GAMEPADS_DEFAULT"
+    fi
+    if [ "$help_flag" = 1 ] && [ "$tips_flag" = 1 ]; then
+        HELP="$HELP_TIPS"
+    else
+        HELP="$HELP_DEFAULT"
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the header of the dialog menu
+generateHeader(){
+    title="$(printf "%s - %s - %s" "$SLOGAN_OR_CORE" "$MODEL_CUT" "$ID")"
+    message="$(printf " %s" "$MESSAGE_MENU")"
+    DIALOG="dialog --ok-label \"$OK\" --cancel-label \"$CANCEL\" --clear $extra_options --no-tags --stdout \\
+        --title \"$title\" \\
+        --menu \"$message\" $lines_menu $param_1 $param_2 \\"
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the header of the dialog menu on disk
+generateHeaderOnDisk(){
+    rm -f "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+
+    {
+        echo "#!/bin/bash" 2>/dev/null
+        echo "tmp_file_menu=$tmp_file_menu" 2>/dev/null
+        echo "title=\"$(printf "%s - %s - %s" "$SLOGAN_OR_CORE" "$MODEL_CUT" "$ID")"\" 2>/dev/null
+        echo "message=\"$(printf " %s" "$MESSAGE_MENU")"\" 2>/dev/null
+        echo "dialog --ok-label \"$OK\" --cancel-label \"$CANCEL\" --clear $extra_options --no-tags \\" 2>/dev/null
+        echo "--title \"\$title\" \\" 2>/dev/null
+        echo "--menu \"\$message\" $lines_menu $param_1 $param_2 \\" 2>/dev/null
+    } > "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Insert the cores into the MENU from linesGenerate
+generateCoresMENU(){
+	EXCLUDE_SYMBOL="$1"  
+    for ((i = 1; i < counter; i++)); do
+        output=${lines_reader[((i-1))]}
+        if [ "$EXCLUDE_SYMBOL" = "EXCLUDE_SYMBOL" ] && [ "$i" = "$((counter-1))" ]; then
+            DIALOG+="$i \"$output\""
+        else
+            DIALOG+="$i \"$output\" \\"
+        fi
+    done
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+ 
+# Generate the LAYOUTS menu on disk (Button Map)
+generateLayoutsOnDisk(){
+    {
+        echo "- \"     ← ↓ ↑ → A B C X Y Z L R L2 R2 L3 R3 STR SEL ------ $COMMENTS -------\" \\" 2>/dev/null
+        for ((i=1; i <= counter; i++)); do
+            output=$(cat "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$i".cfg 2>/dev/null)
+            indice=$(printf "%2d" $i)
+            echo "$i \"$indice)  $output\" \\" 2>/dev/null
+        done
+    } >> "$INPUTS"/tmp/MENU_TEMP.sh
+
+    echo "2>\"\$tmp_file_menu\"" >> "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+    source "$INPUTS"/tmp/MENU_TEMP.sh
+    menu_status="$?"
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+ 
+# Generate menu excluding selected LAYOUT
+generateLayoutExcludeInputMENU(){
+    {
+        echo "- \"     ← ↓ ↑ → A B C X Y Z L R L2 R2 L3 R3 STR SEL ------ $COMMENTS -------\" \\" 2>/dev/null
+        for ((i=1; i <= counter; i++)); do
+            if [ "$i" != "$first_profile" ]; then
+                output=$(cat "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$i".cfg 2>/dev/null)
+                indice=$(printf "%2d" $i)
+                echo "$i \"$indice)  $output\" \\" 2>/dev/null
+            else
+                indice=$(printf "%2d" $i)
+                echo "- \"$indice)  $SELECTED\" \\" 2>/dev/null
+            fi
+        done
+    } >> "$INPUTS"/tmp/MENU_TEMP.sh
+
+    echo "2>\"\$tmp_file_menu\"" >> "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+    source "$INPUTS"/tmp/MENU_TEMP.sh
+    menu_status="$?"
+
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the menu from the backup files found on disk
+generateBackupMENU(){
+    lines_check=$(find "$INPUTS" -maxdepth 1 -name 'Backup-GCM-MiSTer-*' | wc -l 2>/dev/null)
+
+    if [ "$lines_check" = 0 ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$NO_BACKUP_FILES")
+        messageDIALOG
+        backupMENU
+    fi
+
+    find "$INPUTS" -maxdepth 1 -name 'Backup-GCM-MiSTer-*' > "$tmp_file_menu"
+    
+    backups=()
+    while IFS= read -r line; do
+        backups+=("$line")
+    done < "$tmp_file_menu"
+
+    rm "$tmp_file_menu"
+
+    lines_menu=$((lines_check + 9))
+    param_1=67
+    param_2=4
+
+    DIALOG="dialog --ok-label \"$OK\" --clear \"$extra_options\" --no-tags --stdout \\
+            --title \"$SLOGAN - $MODEL_CUT - $ID\" \\
+            --menu \"$BACKUP_MESSAGE\" $lines_menu $param_1 $param_2 \\
+X \"$EXIT_MENU\" \\
+- \"---------------------------------------\" \\"
+
+    for ((i = 0; i < ${#backups[@]}; i++)); do
+        output=$(basename "${backups[$i]}")
+        if [ "$i" -lt $((${#backups[@]} - 1)) ]; then
+            DIALOG+="$((i + 1)) \"$((i + 1))) $output\" \\"
+        else
+            DIALOG+="$((i + 1)) \"$((i + 1))) $output\""
+        fi
+    done
+
+    runDIALOG NO_CORE_CHOICE # Execute the dialog menu that was generated
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Check if there are any registered gamepads
+checkRegisteredGamepads(){
+    lines_check=$(wc -l < "$INPUTS/configs/registered_gamepads.cfg" 2>/dev/null)
+
+    if [ "$lines_check" = 0 ]; then
+        gamepadsMENU
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Count the number of registered gamepads
+countGamepads(){
+    if [ ! -f "$INPUTS/configs/registered_gamepads.cfg" ]; then
+        lines_check=0
+    else
+        lines_check=$(wc -l < "$INPUTS/configs/registered_gamepads.cfg" 2>/dev/null)
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Check if any gamepad is registered
+testGamepads(){
+    countGamepads # Count the number of registered gamepads
+
+    if [ "$lines_check" = 0 ]; then
+        messageNoGamepadConfigured # Show message that no gamepad has been registered yet
+        registerGamepad
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the lines for the menu
+linesArray(){
+	sed -i '1{/^[[:space:]]*$/d}' "$DIR_TARGET"
+    counter=1
+    lines_array=()
+    while IFS= read -r line; do
+        lines_array[counter-1]="$line"
+        ((counter++))
+    done < "$DIR_TARGET"
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Start generating the menu with the registered gamepads
+makeGamepadMENU(){
+    checkRegisteredGamepads # Check if there are any registered gamepads
+
+    DIR_TARGET="$INPUTS"/configs/registered_gamepads.cfg # DIR_TARGET to the linesArray
+    linesArray # Generate the lines for the menu
+
+    lines_menu=$((counter + 6 ))
+    MESSAGE_MENU="$DISPLAY_MESSAGE"
+    param_1=67
+    param_2=4
+    extra_options="--no-cancel"
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate gamepad list menu and run the dialog
+generateListRegisteredGamepads(){
+    OPTIONS="$1"
+
+    for ((i = 1; i < counter; i++)); do
+        output=${lines_array[((i-1))]}
+        output_menu=$(echo "$output" | cut -c1-60 2>/dev/null)
+        DIALOG+="$i \"$output_menu\" \\
+"
+    done
+
+    choice=$(eval "$DIALOG")
+
+    if [ "$?" -eq 1 ]; then
+        gamepadsMENU
+    fi
+
+    if [ "$OPTIONS" = "ID_MODEL" ]; then
+        ID_CHOICE=$(sed -n "${choice}p" "$INPUTS"/configs/registered_gamepads.cfg | cut -c1-9 2>/dev/null)
+        MODEL_CHOICE=$(sed -n "${choice}p" "$INPUTS"/configs/registered_gamepads.cfg | cut -c13- 2>/dev/null)    
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Register the gamepad and update SELECTED_GAMEPAD ID and MODEL
+recordGamepadID(){
+    echo "$ID_CHOICE" > "$INPUTS"/configs/selected_gamepad_ID.cfg 2>/dev/null
+    echo "$MODEL_CHOICE" > "$INPUTS"/configs/selected_gamepad_MODEL.cfg 2>/dev/null
+    grep "$ID_CHOICE" "$INPUTS"/configs/registered_gamepads.cfg > "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    grep -v "$ID_CHOICE" "$INPUTS"/configs/registered_gamepads.cfg >> "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp 2>/dev/null
+    mv "$INPUTS"/configs/REGISTERED_GAMEPADS.tmp "$INPUTS"/configs/registered_gamepads.cfg 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Update the NO_GAMEPAD message in the selected language
+updateNoGamepadMessage(){
+    if [ ! -f "$INPUTS/configs/registered_gamepads.cfg" ]; then
+        lines=0
+    else
+        lines=$(wc -l < "$INPUTS/configs/registered_gamepads.cfg" 2>/dev/null)
+    fi
+
+    if [ "$lines" = 0 ]; then
+        echo "$NO_GAMEPAD" > "$INPUTS/configs/selected_gamepad_MODEL.cfg" 2>/dev/null
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Show message that no gamepad has been registered yet
+messageNoGamepadConfigured(){
+    if [ "$LANGUAGE" = "en" ]; then
+        lines_menu=15
+    else
+        lines_menu=16
+    fi  
+    dialog --title "$SLOGAN - $ATTENTION" --textbox "$INPUTS"/data/NO_GAMEPAD_"$LANGUAGE".txt "$lines_menu" 75
+    gamepadsMENU
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Prevention: removes duplicate records and sorts
+cleanRegisteredFile(){ 
+    awk '!seen[$1]++' "$INPUTS"/configs/registered_gamepads.cfg | sort > "$INPUTS"/configs/REGISTERED_GAMEPADS.temp 2>/dev/null
+    mv "$INPUTS"/configs/REGISTERED_GAMEPADS.temp "$INPUTS"/configs/registered_gamepads.cfg 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the lines - List of Cores
+linesGenerate(){
+    find "$INPUTS"/gamepad-"$ID"/*-"$ID"/ -type d -exec basename {} \; | sed "s|-$ID$||" > "$menu_file" 2>/dev/null
+
+    counter=1
+    lines_reader=()
+
+    while IFS= read -r line; do
+        lines_reader+=("$line")
+        ((counter++))
+    done < "$menu_file"
+
+    lines_menu=$((counter + "$increase"))
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generate the menu with the Profiles (Button Map)
+generateLayoutsMENU(){
+    find "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID" -type f -name "LAYOUT_${ID}_*" | sort > "$menu_file" 2>/dev/null
+
+    counter=0
+
+    while IFS= read -r line; do
+        ((counter++))
+    done < "$menu_file"
+
+    if [ "$counter" -eq 1 ] && [ "$CHECK_1_SLOT" != 0 ]; then
+        title=$(printf "%s - %s" "$CORE" "$WINDOW_TITLE")
+        message_ln1=$(printf "\n%s" "$ONLY_ONE")
+        messageDIALOG
+        coreMENU
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Check if there are LAYOUT files in the Core folder
+layoutTEST(){
+    counter=$(find "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID" -type f -name "LAYOUT_*" | wc -l 2>/dev/null)
+
+    if [ "$counter" = 0 ]; then
+        title=$(printf "%s - %s:%s - %s:[%s]" "$CORE" "$TYPE_CONTROL" "$TYPE_DISPLAY" "$CURRENT_INFO" "$CURRENT")
+        message_ln1=$(printf "\n%s" "$SLOTS_NOT_FOUND")
+        messageDIALOG
+        coreMENU
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Move the Profiles (Buttons Map)
+moveProfile(){
+    if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+        mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$file_1".map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_"$file_2".map 2>/dev/null
+    fi
+
+    if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+        mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$file_1".map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_"$file_2".map 2>/dev/null
+    fi
+
+    mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$file_1".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_"$file_2".cfg 2>/dev/null
+    mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$file_1".cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_"$file_2".cfg 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Reorganize the order of the PROFILES
+reorganizeProfilesOrder(){
+    for ((i = first_profile; condition; i+=inc)); do
+        if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+            mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_$((i + inc)).map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_$i.map 2>/dev/null
+        fi
+
+        if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+            mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_$((i + inc)).map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_$i.map 2>/dev/null
+        fi
+
+        mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_$((i + inc)).cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_$i.cfg 2>/dev/null
+        mv "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_$((i + inc)).cfg "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_$i.cfg 2>/dev/null
+    done
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Copy the MiSTer configurations to a new SLOT
+createNewSLOT(){
+    if [ "$TYPE" = "v3" ] || [ "$TYPE" = "jk_v3" ]; then
+        cp "$INPUT_MISTER"/"$CORE"_input_"$ID"_v3.map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_v3-CONFIG_$counter.map 2>/dev/null
+    fi
+
+    if [ "$TYPE" = "jk" ] || [ "$TYPE" = "jk_v3" ]; then
+        cp "$INPUT_MISTER"/"$CORE"_input_"$ID"_jk.map "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/"$CORE"_input_"$ID"_jk-CONFIG_$counter.map 2>/dev/null
+    fi
+
+    touch "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/GAMES_"$ID"_$counter.cfg 2>/dev/null
+    touch "$INPUTS"/gamepad-"$ID"/"$CORE"-"$ID"/LAYOUT_"$ID"_$counter.cfg 2>/dev/null
+
+    title=$(printf "%s - %s - %s:%s" "$CORE" "$MODEL" "$TYPE_CONTROL" "$TYPE_DISPLAY")
+    message_ln1=$(printf "%s Core '%s'" "$CREATE_PROFILE" "$CORE")
+    message_ln2=$(printf "%s '%s'." "$NUMBER" "$counter")
+    messageDIALOG
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Message if a MiSTer configuration is not found
+messageNoConfigurationFound(){
+    title=$(printf "%s - %s - %s:%s" "$CORE" "$MODEL" "$TYPE_CONTROL" "$TYPE_DISPLAY")
+    message_ln1=$(printf "%s Core '%s'." "$MISTER_PLEASE" "$CORE")
+    messageDIALOG
+    coreMENU
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Delete the temporary files and store the selection
+prepareMENU(){
+    if [ "$menu_status" -eq 1 ]; then
+        rm -f "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+        rm -f "$tmp_file_menu" 2>/dev/null
+        coreMENU
+    fi
+
+    rm -f "$INPUTS"/tmp/MENU_TEMP.sh 2>/dev/null
+    choice=$(<"$tmp_file_menu")
+    rm -f "$tmp_file_menu" 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Adjust the menu formatting proportionally to the text
+sizeAdjust(){
+    size_title=${#title}
+    size_message_ln1=${#message_ln1}
+    size_message_ln2=${#message_ln2}
+
+    if [ "$size_message_ln1" -gt "$size_message_ln2" ]; then
+        size_message="$size_message_ln1"
+    else
+        size_message="$size_message_ln2"
+    fi
+
+    if [ "$size_title" -lt "$size_message" ]; then
+        size_dialog="$size_message"
+    else
+       size_dialog="$size_title"
+    fi
+
+    size_dialog=$((size_dialog + 5))
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Execute the dialog menu that was generated
+runDIALOG(){
+    OPTIONS="$1"
+    choice=$(eval "$DIALOG")
+
+    status_message="$?"
+
+    # Check the name of the Core based on the selection
+    if [ "$OPTIONS" != "NO_CORE_CHOICE" ]; then 
+        if [ "$choice" != "-" ] && [ "$choice" != "X" ]; then
+            CORE=$(sed -n "${choice}p" "$menu_file" 2>/dev/null)
+        fi
+        rm -f "$menu_file" 2>/dev/null
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Clear the fields of the dialog
+messageResetDIALOG(){
+    status_message="$?"
+    title=""
+    message_ln1=""
+    message_ln2=""
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Format the dialog message to 1 or 2 lines
+formatMessageDIALOG(){
+    if [ "$size_message_ln2" = 0 ]; then
+        OUTPUT="\n$message_ln1"
+        size_lines="7"   
+    else
+        OUTPUT="\n$message_ln1\n\n$message_ln2"
+        size_lines="9"        
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Print a message in the dialog
+messageDIALOG(){
+    sizeAdjust # Adjust the menu formatting proportionally to the text
+    formatMessageDIALOG # Format the dialog message to 1 or 2 lines
+
+    dialog --ok-label "$OK" --title "$title" \
+        --msgbox "$OUTPUT" "$size_lines" "$size_dialog"
+
+    messageResetDIALOG
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Open an input box in the dialog
+inputDIALOG(){
+    sizeAdjust # Adjust the menu formatting proportionally to the text
+    formatMessageDIALOG # Format the dialog message to 1 or 2 lines
+
+    DIALOG="dialog --ok-label \"$OK\" --cancel-label \"$CANCEL\" --title --stdout \"$title\" --inputbox \"$OUTPUT\" $size_lines $size_dialog"
+    TMP_INPUT=$(eval "$DIALOG")
+
+    messageResetDIALOG
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Open a 'Yes or No' box in the dialog
+yesnoDIALOG(){
+    sizeAdjust # Adjust the menu formatting proportionally to the text
+    formatMessageDIALOG # Format the dialog message to 1 or 2 lines
+
+    dialog --yes-label "$YES" --no-label "$NO" --title "$title" \
+        --yesno "$OUTPUT" "$size_lines" "$size_dialog"
+    messageResetDIALOG
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Display a message if the 'joystick' and/or 'Buttons/Key remap' configurations
+# from MiSTer are not found
+alertMisterDIALOG(){
+    declare -n var="ALERT_MISTER_PROFILE_$EXT"
+    ALERT_MISTER_MESSAGE=$(printf "%s" "$var" | base64 --decode)
+    lines_dialog=$(( ((${#ALERT_MISTER_MESSAGE} + 69) / 70) + 6))
+
+    dialog --ok-label "$OK" --title "$ATTENTION" --msgbox "\n$ALERT_MISTER_MESSAGE" $lines_dialog 80
+
+    mainMENU
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Generates a list of found cores, removes duplicates, and sorts
+generateCoresList(){
+    OPTIONS="$1"
+
+    if [ "$OPTIONS" = "HEADERS" ]; then
+        echo "$SHOW_HEADER" > "$tmp_message" 2>/dev/null
+        echo "" >> "$tmp_message" 2>/dev/null
+    fi
+
+    files=$(find "$CORES_COMPUTER" "$CORES_CONSOLE" "$CORES_OTHER" -type f -name "*.rbf" -exec basename {} .rbf \;)
+    echo "$files" | while read -r file; do
+        echo "${file%_*}" >> "$tmp_message" 2>/dev/null
+    done
+    files=$(find "$CORES_COMPUTER" "$CORES_CONSOLE" "$CORES_OTHER" -type f -name "*.mgl")
+    echo "$files" | while read -r filepath; do
+        file=$(basename "$filepath" .mgl)
+        setname=$(sed -n 's/.*<setname>\(.*\)<\/setname>.*/\1/p' "$filepath" 2>/dev/null)
+        echo "$setname" >> "$tmp_message" 2>/dev/null
+    done
+
+    awk '!seen[$0]++' "$tmp_message" > "$tmp_message.tmp" && mv "$tmp_message.tmp" "$tmp_message" 2>/dev/null
+
+    if [ "$OPTIONS" = "HEADERS" ]; then
+        {
+        echo ""
+        echo "$UNSTABLE_HEADER"
+        echo ""
+        } >> "$tmp_message" 2>/dev/null
+    fi
+
+    files=$(find "$CORES_UNSTABLE" -type f -name "*.rbf" -exec basename {} .rbf \;)
+        echo "$files" | while read -r file; do
+        echo "${file%_*_*_*}" >> "$tmp_message" 2>/dev/null
+    done
+    files=$(find "$CORES_UNSTABLE" -type f -name "*.mgl")
+    echo "$files" | while read -r filepath; do
+        file=$(basename "$filepath" .mgl)
+        setname=$(sed -n 's/.*<setname>\(.*\)<\/setname>.*/\1/p' "$filepath" 2>/dev/null)
+        echo "$setname" >> "$tmp_message" 2>/dev/null
+    done
+
+    awk '!seen[$0]++ && $0 != "menu"' "$tmp_message" | sort > "$tmp_message.tmp" && mv "$tmp_message.tmp" "$tmp_message" 2>/dev/null
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Checks if the Core exists or has already been added to the list
+checkCORE(){
+    check_cores=("$CORES_COMPUTER" "$CORES_CONSOLE" "$CORES_OTHER" "$CORES_UNSTABLE")
+    find_cores=0
+
+    for dir in "${check_cores[@]}"; do
+        check=$(find "$dir" -type f -iname "$CORE*" \
+            | grep -E "^$dir/$CORE(_[0-9]+)?\.[a-zA-Z0-9]+$" 2>/dev/null)
+        check_mgl=$(find "$dir" -type f -name "*.mgl" 2>/dev/null \
+            | while read -r filepath; do
+                  setname=$(sed -n 's/.*<setname>\(.*\)<\/setname>.*/\1/p' "$filepath")
+                  if [ "$setname" = "$CORE" ]; then
+                      echo "$filepath"
+                  fi
+              done)
+        if [ -n "$check" ] || [ -n "$check_mgl" ]; then
+            ((find_cores++))
+        fi
+    done
+
+    if [ "$find_cores" = 0 ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s '%s'." "$NOT_FIND_CORE" "$CORE")
+        message_ln2=$(printf "%s" "$RETURN_TO_INPUT")
+        messageDIALOG
+        addCORE
+    fi
+
+    if [ -d "$INPUTS"/gamepad-"$ID"/"$CORE-$ID" ]; then
+        title=$(printf "%s" "$ATTENTION")
+        message_ln1=$(printf "%s" "$CORE_EXISTS")
+        messageDIALOG
+        addCORE
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# Check if the gamepad-$ID directory exists
+checkGamepadDIR(){
+    if [ ! -d "$INPUTS"/gamepad-"$ID" ] && [ "$ID" != "" ]; then
+        mkdir "$INPUTS"/gamepad-"$ID" 2>/dev/null
+    fi
+}
+
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
+
+# End the program(script)
+exitProgram(){
+    clear
+
+    title=$(printf "%s" "$CONFIRMATION")
+    message_ln1=$(printf "%s" "$EXIT_CONFIRMATION")
+    yesnoDIALOG
+    
+    if [ "$status_message" = 1 ]; then
+        mainMENU
+    fi
+
+    clear
+
+    echo "finished... script gamepad_config_manager.sh v1.0 25.12.25" 2>/dev/null
+    exit 0
+}
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+#                        SCRIPT INIT - Start execution from this point                      #
+
+generateFiles # Check and generate the configuration files for GCM
+controllerID # Check the ID and MODEL of the registered controller
+firstRUN # Script executed on first launch to select language and visual help option
+
+# Checks registered gamepads in the GCM script
+if [ ! -f "$INPUTS/configs/registered_gamepads.cfg" ] || \
+    ! grep -q "_" "$INPUTS/configs/registered_gamepads.cfg"; then
+    messageNoGamepadConfigured # Show message that no gamepad has been registered yet
+    display_init=1 # Enable an indication (arrow) in the menu to register a gamepad
+    mainMENU # launching the mainMENU
+fi
+
+# Counts how many gamepads are registered in the GCM script
+lines=$(wc -l < "$INPUTS/configs/registered_gamepads.cfg" 2>/dev/null)
+
+if [ "$lines" -lt 2 ]; then
+    mainMENU # Only one gamepad is registered; launching the mainMENU
+else
+    selectGamepad # More than one gamepad is registered; launching the selectGamepad
+fi
+
+### END OF SCRIPT ###
