@@ -1,0 +1,6 @@
+
+Nenhuma configuração encontrada para este gamepad em nenhum core
+do MiSTer. Abra um core, acesse "Define 'NOMEDOCORE' buttons" e/ou
+"Button/Key remap", configure o gamepad e tente novamente. Apenas
+cores com configurações de "Botões" e/ou "Remapeamento de
+Botões/Teclas" aparecem nesta lista.

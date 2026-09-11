@@ -1,0 +1,11 @@
+
+No registered gamepad was found!
+
+To use this script, a gamepad must be registered. To do this,
+the gamepad must first be configured in the MiSTer menu and/or
+CORE menu under 'Define Buttons' and/or 'Button/Key Remap'.
+
+In addition, do not forget to access the 'Help' menu for
+important information on how to configure and use this script.
+
+Click 'Exit' to continue.

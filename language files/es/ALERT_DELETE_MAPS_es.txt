@@ -1,0 +1,20 @@
+
+Esta es una función de mantenimiento avanzado que puede
+eliminardefiniciones de joystick o reasignaciones de
+botones/teclaspara un CORE seleccionado.
+
+El tipo de archivo .map seleccionado para el CORE elegido
+se eliminará de la carpeta 'config/inputs' de MiSTer y de los
+SLOTS guardados para todos los GAMEPADS registrados en GCM.
+
+Los SLOTS que contengan únicamente el tipo de configuración
+seleccionado también serán eliminados. Los SLOTS restantes
+se reorganizarán automáticamente.
+
+ATENCIÓN: las configuraciones de LAYOUTS y GAMES de los SLOTS
+eliminados no podrán recuperarse.
+
+El CORE permanecerá en la lista aunque todos sus SLOTS
+sean eliminados. Después del proceso de limpieza,
+podrá crear, modificar o guardar nuevos SLOTS
+para los GAMEPADS y CORES.

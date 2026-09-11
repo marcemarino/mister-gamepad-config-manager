@@ -1,0 +1,12 @@
+
+¡No se encontró ningún GAMEPAD registrado!
+
+Para utilizar este script, es necesario registrar un GAMEPAD. Para
+ello, el GAMEPAD debe configurarse primero en el menú de MiSTer
+y/o en el menú del CORE, en 'Define Buttons' y/o 'Button/Key Remap'.
+
+Además, no olvide acceder al menú 'Help' para obtener
+información importante sobre cómo configurar y utilizar este script.
+
+Haga clic en 'Salir' para continuar.
+

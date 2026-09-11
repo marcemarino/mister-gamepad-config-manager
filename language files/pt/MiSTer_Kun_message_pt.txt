@@ -1,0 +1,3 @@
+     Se você está vendo esta janela perfeitamente, o tamanho da
+    fonte está correto. Caso não veja toda a janela, selecione
+    um tamanho de fonte menor na tela de seleção.

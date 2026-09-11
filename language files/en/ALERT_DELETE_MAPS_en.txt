@@ -1,0 +1,21 @@
+
+ This is an advanced maintenance function that can delete
+joystick definitions or button/key remappings for a
+selected CORE.
+
+ The selected .map file type for the selected CORE will
+be deleted from the MiSTer 'config/inputs' folder and
+from the saved SLOTS for all GAMEPADS registered in GCM.
+
+ SLOTS that contain only the selected configuration type
+will also be deleted. The remaining SLOTS will be
+automatically reorganized.
+
+ WARNING: The LAYOUT and GAME configurations of deleted
+SLOTS cannot be recovered.
+
+ The CORE will remain in the list even if all of its
+SLOTS are deleted. After the cleanup process, you can
+recreate, modify, or save new SLOTS for GAMEPADS and
+CORES.
+

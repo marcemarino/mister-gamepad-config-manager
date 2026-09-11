@@ -1,0 +1,3 @@
+      If you can see this entire window clearly, the font size
+     is correct. If you cannot see the entire window, select
+     a smaller font size on the selection screen.

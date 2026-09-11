@@ -1,0 +1,5 @@
+
+No configurations found for this gamepad on any core in MiSTer. Open
+a core, access "Define 'CORENAME' buttons" and/or "Button/Key remap",
+configure the gamepad, and try again. Only cores with "Buttons" and/or
+"Button/Key remapping" configurations appear in this list.

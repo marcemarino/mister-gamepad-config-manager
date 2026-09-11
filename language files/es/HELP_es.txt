@@ -1,0 +1,725 @@
+════════════════════════════════════════════════════════════════════
+GCM - Gamepad Config Manager
+@MM 2026.09.15
+════════════════════════════════════════════════════════════════════
+
+Script para gestionar configuraciones de gamepads en 'MiSTer FPGA'.
+
+Las configuraciones se guardan en SLOTS que pueden cargarse
+posteriormente, permitiendo múltiples configuraciones por gamepad y
+CORE.
+
+El script se utiliza principalmente mediante gamepad.
+
+El teclado solo es necesario para tareas de edición y configuración
+(explicadas en este HELP).
+
+Gamepad se refiere a cualquier controlador (joystick, gamepad,
+teclado, etc.). Cualquier dispositivo usado como control puede ser
+gestionado.
+
+En este tutorial, cada vez que nos refiramos a las carpetas
+'/media/fat/config' o 'smb://IP/sdcard/config', utilizaremos
+simplemente 'config'. Del mismo modo, para '/media/fat/Scripts' o
+'smb://IP/sdcard/Scripts', utilizaremos simplemente 'Scripts'.
+
+Ubicación del archivo HELP: 'Scripts/gcm/data/HELP_es.txt'
+
+════════════════════════════════════════════════════════════════════
+ÍNDICE
+════════════════════════════════════════════════════════════════════
+
+1) Archivos de MiSTer
+2) El script GCM
+3) Guía de uso del script
+4) Funciones del script
+5) Guía rápida
+6) Información importante
+7) Diagrama de uso - Guía súper rápida
+
+════════════════════════════════════════════════════════════════════
+1) Archivos de MiSTer
+════════════════════════════════════════════════════════════════════
+
+En MiSTer, los archivos de configuración de gamepads se encuentran
+en 'inputs'.
+
+Cuando un gamepad se conecta mediante USB, Bluetooth o 2.4G y se
+configura, se genera un archivo.
+
+Este archivo utiliza el prefijo 'input' seguido de un identificador
+único del gamepad (ejemplo: 1234_abcd), el sufijo 'v3' para
+configuraciones hechas en el menú 'Define joystick buttons', o 'jk'
+para reasignaciones tradicionales, o 'advanced_input_*_v1' para
+reasignaciones avanzadas, y la extensión '.map'.
+
+Ejemplos:
+
+1. input_1234_abcd_v3.map
+2. Intellivision_input_1234_abcd_v3.map
+3. MSX_input_1234_abcd_jk.map o MSX_advanced_input_1234_abcd_v1.map
+
+Archivo 1
+─────────
+
+Configuración realizada en MiSTer en 'Define joystick buttons':
+
+  input     - prefijo del archivo
+  1234_abcd - ID del gamepad (hexadecimal)
+  v3        - definición de los botones del joystick
+  .map      - extensión
+
+Archivo 2
+─────────
+
+Configuración realizada en el menú CORE 'Intellivision' en
+'Define Intellivision buttons':
+
+  La única diferencia es el nombre del CORE 'Intellivision', que
+  aparece como prefijo, seguido de 'input_1234_abcd_v3.map'.
+
+  El sufijo 'v3' indica que es una 'definición de botones del
+  joystick' para el CORE 'Intellivision'.
+
+Archivo 3
+─────────
+
+Configuración realizada en el menú CORE 'MSX' en 'Button/Key remap':
+
+  En este caso, el prefijo será 'MSX' y el sufijo será 'jk' o 'v1'
+  (este acompañado de 'advanced_input'), indicando que es un
+  'remapeo de botones/teclas' para el CORE 'MSX'.
+
+════════════════════════════════════════════════════════════════════
+2) El script GCM
+════════════════════════════════════════════════════════════════════
+
+MiSTer solo guarda una configuración de gamepad por CORE.
+
+El script GCM permite guardar estas configuraciones en SLOTS
+numerados, que pueden cargarse posteriormente.
+
+Cada gamepad registrado puede tener múltiples CORES asociados, con
+diferentes configuraciones.
+
+Funciona como un 'SAVE STATE' del gamepad, pudiendo incluir la
+'definición de botones del joystick (v3)' y/o el 'mapeo de
+botones/teclas (jk, advanced_input_*_v1, o ambos)' para el CORE
+seleccionado, todo realizado automáticamente por el script.
+
+                            Estructura en árbol:
+               GAMEPAD_1                           GAMEPAD_2
+                  |                                   |
+       ___________|_________                          |
+       |                   |                          |
+     CORE_1              CORE_2                     CORE_1
+       |                   |                          |
+   ____|____       ________|________        __________|___________
+   |       |       |       |       |        |      |      |      |
+ SLOT_1  SLOT_2  SLOT_1  SLOT_2  SLOT_3  SLOT_1 SLOT_2 SLOT_3 SLOT_4
+
+════════════════════════════════════════════════════════════════════
+3) Guía de uso del script
+════════════════════════════════════════════════════════════════════
+
+Antes de cualquier cosa, debe configurar al menos un gamepad en
+MiSTer.
+
+Para poder añadir un gamepad al script, es necesario tener al menos
+una configuración realizada mediante 'Define joystick buttons' en el
+menú de MiSTer. Al guardar esta configuración, se creará un archivo
+que contiene el ID del gamepad en la carpeta 'inputs'. Este archivo
+permite identificar el gamepad y dejarlo disponible para registrarlo
+en el script.
+
+Para añadir un CORE al script, es necesario tener al menos una
+configuración realizada mediante 'Define CoreName buttons' y/o
+'Button/Key remap' en el menú del CORE. Después de guardar una de
+estas configuraciones, se generará un archivo con el nombre del
+CORE, que será identificado por el script y permitirá añadirlo
+mediante el menú ADD/EASY. Esta es la forma más fácil de añadir un
+CORE al gamepad.
+
+Otra forma de añadir un CORE es mediante el menú ADD/EXPERT. En este
+caso, no es necesario tener una configuración previa realizada en el
+CORE, pero es necesario conocer el nombre real del CORE, que deberá
+escribirse cuando se solicite. El script buscará en las carpetas
+configuradas en el menú FOLDERS y, si encuentra y valida el CORE, lo
+añadirá al gamepad.
+
+Debido a su complejidad, la carpeta Arcade no puede utilizarse en
+este modo. Para añadir CORES de Arcade, utilice el menú EASY. Para
+ello, basta con tener una configuración de gamepad ya creada para el
+CORE deseado.
+
+En el siguiente ejemplo, suponemos que el gamepad fue configurado en
+MiSTer y también en el CORE de Intellivision.
+
+PASOS
+─────
+
+1. Configure el gamepad en MiSTer en 'Define joystick buttons'.
+
+2. Aún en MiSTer, configure este mismo gamepad en el menú del CORE.
+Por ejemplo, para 'Intellivision', pulse en  'Define Intellivision
+buttons'.
+
+3. Abra este script GCM.
+
+4. En el script, pulse en 'MANAGE(GAMEPADS)' y 'REGISTER'. Registre
+el gamepad.
+
+5. En el 'MENU' inicial, pulse en 'ADD - ADICIONAR CORE / EASY'.
+Seleccione el nombre del CORE, en este caso, 'Intellivision'.
+
+6. Con el CORE ya añadido, pulse en el menú 'CORES' y seleccione
+el CORE 'Intellivision'.
+
+7. En el 'CORE MENU', pulse en 'SAVE CONFIG - CORE --> NOVO SLOT'.
+
+  La configuración actual para el gamepad 1234_abcd en el 'CORE
+  Intellivision' se guardará en el 'SLOT 1'. En nuestro caso, la
+  configuración identificada por el script fue solo 'definición de
+  botones del joystick' (v3) y será identificada con la letra J.
+
+  Esta configuración de SLOT incluye dos archivos adicionales que
+  pueden editarse para facilitar la identificación. La edición es
+  opcional.
+
+  a) El primero es 'LAYOUTS - MAPA DE BOTOES', donde puede
+     especificar la relación entre los botones del gamepad y los
+     controles del CORE.
+
+    La primera línea puede editarse usando la configuración de
+    botones, mientras que la segunda línea sirve como referencia
+    predeterminada.
+
+   INFO: 'El control de 'Intellivision' también incluye un teclado
+         numérico, además del direccional y los botones de acción.'
+
+ Ejemplo:
+  Pantalla de edición 'LAYOUTS - [EDITAR] MAPA DE BOTONES (SLOT 1)':
+┌───────────────────────────────────────────────────────────┐
+│                                                           │
+│ ← ↓ ↑ → L U R 3 4 5 1  2          EN CL   A B C = Accion  │
+│ ← ↓ ↑ → A B C  X Y Z  L1 R1  EXT  ST SL |----- OTROS ----|│
+│                                                           │
+└───────────────────────────────────────────────────────────┘
+
+obs.:
+  En los ejemplos, usaremos un control 8BitDo M30 y la TAG
+  'Mega/Saturn', que tiene un LAYOUT adecuado para este control.
+
+  TAG del control de Mega/Saturn:
+  ← ↓ ↑ → A B C  X Y Z  L1 R1  EXT  ST SL
+  (Puedes elegir la TAG que mejor se adapte a tu gamepad.)
+
+  En las TAGs, ST = Start y SL = Select.
+
+  Puedes editar tu propia TAG y usar los símbolos que
+  prefieras.
+
+  EN = ENTER en el control de Intellivision
+  CL = CLEAR en el control de Intellivision
+
+  b) El segundo es 'GAMES - LISTA DE JOGOS', donde puede editar los
+    juegos asociados a la configuración del 'SLOT 1'.
+
+    Cada nombre de juego debe estar en una línea separada.
+
+ Ejemplo:
+  Pantalla de edición 'GAMES - [EDITAR] LISTA DE JUEGOS (SLOT 1)':
+┌───────────────────────────────────────────────────────────────┐
+│                                                               │
+│ Burgertime                                                    │
+│ Bump'n'Jump                                                   │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+
+8. A continuación, en MiSTer, puede reconfigurar el gamepad para
+   otro juego que necesite una configuración de botones diferente.
+
+  Basta con repetir el PASO 7, y la nueva configuración se
+  guardará en un nuevo SLOT.
+
+  Es posible visualizar el 'MAPA DE BOTOES' y la 'LISTA DE JOGOS' en
+  los menús 'LAYOUTS' y 'GAMES'.
+
+  Ejemplo con '3 SLOTS' de 'Intellivision':
+
+  a) 'MENU' / 'LAYOUTS'
+
+ Ejemplo:
+   Pantalla de visualización 'LAYOUTS - [VER] MAPA DE BOTONES':
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│  SLOT  ← ↓ ↑ → A B C  X Y Z  L1 R1  EXT  ST SL        OTROS      │
+│  ----  --------------------------------------- ------------------│
+│J   1)  ← ↓ ↑ → L U R  3 4 5  1  2        EN CL   A B C = Accion  │
+│J   2)  ← ↓ ↑ → 7 8 9  1 2 3  4  6        5  CL Sin Botones Accion│
+│J   3)  ← ↓ ↑ → U 0 R  4 5 6  7  9        1  3      A C = Accion  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+  Observe la letra J, que indica que las configuraciones guardadas
+  en los SLOTS corresponden a la 'definición de botones del
+  joystick' para cada juego.
+
+  b) 'MENU' / 'GAMES'
+
+ Ejemplo:
+   Pantalla de visualización 'GAMES - [VER] LISTA DE JUEGOS':
+┌───────────────────────────────────────────────────────────────┐
+│                                                               │
+│ Atlantis - 3                                                  │
+│ Bump'n'Jump - 1                                               │
+│ Burgertime - 1                                                │
+│ Tron - 2                                                      │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+
+  Esta lista, mostrada arriba, está organizada alfabéticamente por
+  el nombre de los juegos.
+
+  Observe que el 'mapa de botones' y la 'lista de juegos' indican el
+  SLOT, facilitando el siguiente PASO.
+
+  Nota: El ejemplo utilizó el CORE Intellivision, pero el mismo
+  procedimiento puede seguirse para configurar cualquier otro CORE
+  deseado. Basta con seguir los mismos pasos con el CORE que desea
+  configurar.
+
+  Otro ejemplo:
+
+  CORE Apple-II - Juegos Lode Runner y Karateka
+
+  a) 'MENU' / 'LAYOUTS'
+
+ Ejemplo:
+   Pantalla de visualización 'LAYOUTS - [VER] MAPA DE BOTONES':
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│  SLOT  ← ↓ ↑ → A B C  X Y Z  L1 R1  EXT  ST SL        OTROS      │
+│  ----  --------------------------------------- ------------------│
+│R   1)  J K I L U O                       CT       CTL+k=teclado  │
+│A   2)  ← ↓ ↑ → X S W  Z A S  B  SP       EN    DP=dirs SP=espacio│
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+Obs.:
+ EN = ENTER en el teclado
+ CT = CONTROL en el teclado
+ SP = ESPACIO en el teclado
+
+ DP = DPad en el gamepad / dirs = direcciones, flechas en el teclado
+
+  Observe la letra R, que indica que la configuración guardada en el
+  SLOT 1 corresponde al 'mapeo de botones/teclas' realizado para el
+  juego Lode Runner.
+
+  El segundo SLOT está identificado con la letra A, indicando que en
+  ese SLOT se guardaron ambas configuraciones, 'definición de
+  botones del joystick' y 'mapeo de botones/teclas' para el juego
+  Karateka.
+
+  Esta clasificación J, R o A corresponde a las configuraciones
+  identificadas en el momento del SAVE.
+
+  Puede memorizarlas así:
+    J = Joystick/Gamepad (v3)
+    R = Remapeo de Botones/Teclas (jk / advanced_input_*_v1)
+    A = Ambas (J + R)
+
+  b) 'MENU' / 'GAMES'
+
+ Ejemplo:
+   Pantalla de visualización 'GAMES - [VER] LISTA DE JUEGOS':
+┌───────────────────────────────────────────────────────────────┐
+│                                                               │
+│ Karateka - 2                                                  │
+│ Lode Runner - 1                                               │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+
+  Obs.: En los menús de selección y visualización de LAYOUTS y
+  GAMES, el símbolo ⇒ indica el último SLOT seleccionado y
+  actualmente activo.
+
+9. 'MENU' / 'LOAD': pulse en 'LOAD - SLOT --> CORE' y elija un SLOT
+para cargar la configuración guardada y sobrescribir la
+configuración del CORE.
+
+  Los únicos archivos de MiSTer que se modifican son los 'v3' y/o
+  'jk' o 'advanced_input_*_v1' del CORE, que se sustituirán al
+  ejecutar el comando 'LOAD'.
+
+  * Si el SLOT está identificado como J:
+     archivos sustituidos:
+      'CORE_input_ID_v3.map'.
+
+      Ejemplo:
+
+        Intellivision_input_1234_abcd_v3.map
+
+  * Si es R (Remap):
+     archivos sustituidos:
+      'CORE_input_ID_jk.map' y/o 'CORE_advanced_input_ID_v1.map'.
+
+      Ejemplos:
+
+        ZX81_input_1234_abcd_jk.map
+        ZX81_advanced_input_1234_abcd_v1.map
+
+  * Si es A (Ambas):
+     archivos sustituidos:
+      'CORE_input_ID_v3.map' y los archivos de remapeo
+      'CORE_input_ID_jk.map' y/o 'CORE_advanced_input_ID_v1.map'.
+
+      Ejemplos:
+
+        MSX_input_1234_abcd_v3.map, MSX_input_1234_abcd_jk.map
+        y/o MSX_advanced_input_1234_abcd_v1.map
+
+════════════════════════════════════════════════════════════════════
+4) Funciones del script
+════════════════════════════════════════════════════════════════════
+
+El script GCM incluye las siguientes funciones:
+
+  - Gestionar CORES:
+  ● CORES - seleccionar uno de los CORES previamente añadidos al GCM
+  ● ADD - Añadir un CORE:
+    ■ EASY - seleccionar de una lista un CORE ya configurado en
+             MiSTer
+    ■ EXPERT - escribir el nombre real del CORE
+    ■ FOLDERS - configurar las carpetas donde buscar CORES en EXPERT
+    ■ LIST - listar los CORES instalados en las carpetas
+             configuradas
+  ● VIEW - visualizar names.txt - nombres reales de los CORES y del
+           menú
+  ● RENAME - renombrar un CORE ya añadido al GCM:
+    ■ RENAME - escribir el nuevo nombre para el CORE
+    ■ LIST - mostrar la lista de CORES renombrados
+  ● DELETE - eliminar un CORE del GCM
+
+  - Gestionar SLOTS en el CORE seleccionado (CORE MENU):
+  ● LOAD - sobrescribir la configuración actual del CORE en MiSTer
+           con una guardada en el SLOT seleccionado
+  ● LAYOUTS - visualizar el 'mapa de botones'
+  ● GAMES - visualizar la 'lista de juegos'
+  ● SAVE CONFIG - guardar la configuración actual del CORE en MiSTer
+                  en un nuevo SLOT
+  ● EDIT LAYOUT - editar el 'mapa de botones'
+  ● EDIT GAMES - editar la 'lista de juegos'
+  ● MOVE - mover la posición de un SLOT
+  ● SWITCH - intercambiar las posiciones de dos SLOTS
+  ● DELETE - eliminar un SLOT
+  ● OVERWRITE - sobrescribir la config. de un SLOT con la del CORE
+  ● COPY - Copiar SLOT a un nuevo SLOT
+  ● NOTES - escribir notas para un gamepad/CORE determinado
+
+  - Gestionar GAMEPADS:
+  ● SELECT - seleccionar uno de los gamepads registrados
+  ● LIST - mostrar una lista con todos los gamepads registrados
+  ● RENAME - renombrar un gamepad registrado en GCM
+  ● DELETE - eliminar un gamepad registrado en GCM
+  ● EDIT TAG - editar la etiqueta de los menús 'LAYOUTS' y
+               'EDIT LAYOUT'
+  ● REGISTER - registrar un nuevo gamepad en GCM
+  ● CLONE - clonar las configuraciones de un gamepad a otro en GCM
+
+  - Personalización, configuración y backup:
+  ● SETTINGS:
+    ■ COLOR SCHEMES - elegir un esquema de colores para los menús
+    ■ COLOR STYLE - elegir un estilo de color para selecciones y
+                    botones
+    ■ LANGUAGE - elegir el idioma: inglés, portugués o español
+    ■ TEXT CASE - definir mayúsculas/minúsculas en los menús
+    ■ TEXT ACCENTS - activar/desactivar acentos en los textos
+    ■ FONT SIZE - definir el tamaño de fuente de los menús
+    ■ TIPS - activar o desactivar indicaciones visuales en los menús
+
+  ● ADVANCED - SETTINGS:
+    ■ DELETE - definiciones de joystick y remapeo de botones/teclas
+      ▲ JOYSTICK - eliminar las definiciones de joystick (v3)
+      ▲ REMAP - eliminar el remapeo de botones/teclas (v1/jk)
+    ■ RESET - restablecer la configuración, manteniendo las carpetas
+    ■ BACKUP:
+      ▲ SAVE - guardar las configuraciones de GCM y/o MiSTer en un
+               archivo
+      ▲ RESTORE - restaurar las configuraciones desde un archivo
+                  guardado
+      ▲ DELETE - eliminar un backup de la carpeta 'Scripts/gcm'
+    ■ UNINSTALL - eliminar el script y la carpeta del programa
+
+Las únicas funciones que modifican archivos de MiSTer son:
+
+1 - LOAD
+Reescribe la configuración actual del gamepad/CORE con una versión
+guardada previamente.
+
+2 - RESTORE
+Restaura un backup y sobrescribe las configuraciones, si es un
+backup del tipo 'full'. Consulte el tema 6, sección III.
+
+3 - DELETE (ADVANCED - SETTINGS)
+Elimina los archivos de definición de joystick y remapeo (v3/v1/jk)
+de la carpeta 'inputs' de MiSTer y de los SLOTS de GCM. Los
+SLOTS que queden sin al menos una configuración serán eliminados y
+no podrán recuperarse.
+
+Todas las demás funciones crean y manipulan archivos únicamente
+dentro de la carpeta 'Scripts/gcm'. Los archivos de backup se
+almacenan en el directorio raíz de la tarjeta SD.
+
+════════════════════════════════════════════════════════════════════
+5) Guía rápida
+════════════════════════════════════════════════════════════════════
+
+Aquí tiene una guía rápida de las funciones principales.
+
+Primero, configure el gamepad en MiSTer y en el CORE deseado.
+
+Estas son las cuatro funciones esenciales del 'MENU', ejecutadas en
+orden:
+
+  1. 'GAMEPADS / REGISTER': Registrar un nuevo gamepad.
+  2. 'ADD': Añadir un CORE a un gamepad ya registrado.
+  3. 'CORES': Seleccione el CORE elegido.
+  4. SAVE CONFIG: Guardar la configuración del gamepad/CORE en un
+  SLOT. (ejemplo: SLOT 1)
+
+   Puede crear otra configuración para el mismo gamepad en el menú
+   del CORE en 'Define CoreName buttons' y/o 'Button/Key remap', y
+   repetir los pasos 1 a 4, guardando la configuración en otro SLOT.
+   (ejemplo: SLOT 2)
+
+  5. 'LOAD': Cargar un SLOT y sobrescribir la configuración del
+  CORE.
+
+Funciones útiles, pero opcionales:
+
+  6. 'EDIT LAYOUT' y 'EDIT GAMES': Editar las representaciones
+  visuales de las configuraciones guardadas en los SLOTS (se
+  requiere teclado).
+  7. 'LAYOUTS' y 'GAMES': Visualizar los indicadores visuales.
+
+Con estas seis funciones ya tiene todo lo necesario para utilizar el
+script. Las demás funciones sirven principalmente para organizar
+SLOTS, CORES, GAMEPADS y para personalizaciones o backups.
+
+CONSEJO: Después de configurar todo, el script puede utilizarse
+completamente con el gamepad, utilizando los botones 'Seleccionar' y
+'Retornar' de MiSTer para acceder a los menús LOAD, LAYOUTS y GAMES,
+las principales funciones del menú del GCM. Para finalizar, pulse en
+EXIT para volver al menú de MiSTer.
+
+════════════════════════════════════════════════════════════════════
+6) Información importante
+════════════════════════════════════════════════════════════════════
+
+I. Carpeta GCM
+
+- El script almacena todas las configuraciones en la carpeta
+  'Scripts/gcm'.
+
+- Dentro de esta carpeta encontrará:
+
+ * Carpeta 'configs'      - archivos de configuración del script
+ * Carpeta 'data'         - archivos de idioma
+ * Carpeta 'fonts'        - archivos de fuentes '.psf.gz'
+ * Carpeta 'tmp'          - archivos temporales del script
+ * Carpeta 'gamepads'     - contiene las carpetas de los gamepad
+                            registrados:
+    ejemplo: '1234_abcd' - el nombre es el ID del gamepad
+
+    * Dentro de cada carpeta de gamepad registrado están las
+      carpetas de los 'CORES':
+
+      MSX, Intellivision, Apple-II, etc.
+
+      Ejemplos de rutas completas:
+
+      Scripts/gcm/gamepads/1234_abcd/MSX
+      Scripts/gcm/gamepads/1234_abcd/Intellivision
+      Scripts/gcm/gamepads/1234_abcd/Apple-II
+
+II. Menú ADD - Añadir CORES
+
+- El script GCM busca CORES que hayan sido configurados previamente.
+  Cualquier CORE con una configuración válida puede añadirse y
+  estará disponible accediendo al menú ADD.
+
+III. Backup
+
+Tipos de archivos de backup
+───────────────────────────
+
+- Los archivos de backup .zip tienen los siguientes nombres:
+    Backup-GCM-MiSTer-26_09_15-12_30.zip
+    Backup-GCM-MiSTer-full-26_09_15-12_35.zip
+
+- El prefijo 'Backup-GCM-MiSTer' identifica el archivo de backup de
+  GCM.
+
+- Los backups con 'full' en el nombre incluyen también los archivos
+  .map de la carpeta 'inputs' de MiSTer.
+
+- Los backups se crean en la raíz de la tarjeta SD (/media/fat).
+  Pueden moverse a un ordenador o copiarse de nuevo a la misma
+  carpeta.
+
+- Todos los archivos de backup en '/media/fat' pueden restaurarse.
+
+- La restauración de la carpeta 'Scripts/gcm' no es incremental.
+  Contiene una copia completa de todos los archivos del script.
+
+- Restaurar archivos .map de 'inputs' (en un backup 'full')
+  sobrescribirá únicamente los archivos presentes en la carpeta y en
+  el backup. Otros archivos no se eliminan ni modifican.
+
+Backup de los archivos del script GCM
+─────────────────────────────────────
+
+Ejemplo: Backup-GCM-MiSTer-26_09_15-12_30.zip
+
+- Las opciones 'SAVE' y 'RESTORE' del menú 'BACKUP' permiten guardar
+  y restaurar 'Scripts/gcm', que contiene configuraciones de
+  GAMEPADS, CORES y SLOTS utilizados por el script.
+
+- Obs.: los archivos .map de 'inputs' no están incluidos.
+
+- Después de restaurar un backup, asegúrese de que los archivos de
+  joystick (.v3) y/o remap (.jk / advanced_input_*_v1) estén
+  configurados en MiSTer si todavía no existen:
+
+    1. Vaya a 'Define joystick buttons' en MiSTer y configure el
+       gamepad.
+
+    2. En el menú del CORE, configure los botones del joystick
+       (Define CoreName buttons) y el remapeo del teclado
+       (Button/Key remap) si es necesario.
+
+- Para copiar los backups de GCM, use FTP o Samba para acceder a la
+  carpeta '/media/fat'. Puede transferirlos entre MiSTer y su PC.
+
+Backup con 'full' en el nombre
+──────────────────────────────
+
+Ejemplo: Backup-GCM-MiSTer-full-26_09_15-12_35.zip
+
+- Incluye archivos del script + archivos .map con configuraciones de
+  control.
+
+- Restaurar un backup 'full' sobrescribirá las configuraciones
+  actuales de MiSTer si están presentes.
+
+Restaurar backup en una instalación nueva de MiSTer
+───────────────────────────────────────────────────
+
+- En la primera ejecución, si se encuentra un backup en la raíz de
+  la tarjeta SD (/media/fat), podrá restaurarse automáticamente
+  mediante confirmación.
+
+- ¡Atención! Coloque solo un archivo de backup en la raíz de la
+  tarjeta SD (/media/fat) si desea restaurar los archivos en la
+  primera ejecución.
+
+- Si el archivo es un backup 'full', también se restaurarán los
+  archivos de MiSTer.
+
+IV. Desinstalación
+
+- Para desinstalar, use el menú UNINSTALL o elimine 'Scripts/gcm' y
+  el script 'gamepad_config_manager.sh' de la carpeta 'Scripts'.
+
+V. Tamaño de la fuente
+
+- Puede elegir entre 4 tamaños de fuente: pequeño, mediano, grande y
+  enorme, dependiendo del tamaño de la pantalla y del tipo de TV que
+  use. El tamaño pequeño es adecuado para televisores CRT, mientras
+  que los tamaños mediano, grande y enorme son más adecuados para
+  televisores modernos.
+
+- Si selecciona un tamaño de fuente que supere el tamaño de la
+  pantalla y algún botón queda inaccesible, no se preocupe. Basta
+  con apagar MiSTer mientras GCM aún esté abierto. La próxima vez
+  que ejecute GCM, el tamaño de fuente se restablecerá a pequeño.
+  Siempre que el script no se cierre usando el botón EXIT del menú,
+  el tamaño de fuente se restablecerá a pequeño.
+
+════════════════════════════════════════════════════════════════════
+7) Diagrama de uso - Guía súper rápida
+════════════════════════════════════════════════════════════════════
+
+        ¿Ya tiene un gamepad configurado en MiSTer?
+                           |
+        No                 |                     Sí
+          _________________|______________________
+         |                                       |
+         |                              ¿Ya tiene una configuración
+ Cierre GCM y configure              de gamepad en el CORE de MiSTer
+ el gamepad en MiSTer antes             que pretende utilizar?
+ de volver a abrir GCM.                          |
+                            Sí                   |              No
+                            _____________________|_______________
+                           |                                    |
+                           |<--------------   Abra el CORE en MiSTer
+                           |               | y configure el gamepad.
+                   ¿Ya tiene un gamepad    |
+                    registrado en GCM?     |__________
+                           |                          |
+                           |  No                      |
+                           |-----> Registre un gamepad|
+                           |
+                       Sí  |
+                           |
+                           |
+                  Seleccione un gamepad
+                           |
+                           |<-------------------------------
+                           |                                |
+                     ¿Ya añadió un CORE                     |
+                   al gamepad seleccionado?                 |
+                           |                                |
+                           | No                             |
+                           |-------------> Añada un CORE    |
+                           |                al gamepad______|
+                       Sí  |
+                           |
+                   Seleccione un CORE
+                           |
+                           |
+                    ¿Qué desea hacer?
+          _________________|_______________________
+          |                                        |
+ 1- Cargar una configuración         2- Guardar una configuración de
+    guardada en un SLOT de GCM          MiSTer en un SLOT de GCM.
+    para el CORE de MiSTer.                        |
+          |                                        |
+          |<------------------------      ¿Desea crear un nuevo SLOT
+          |                         |    on las configuraciones del
+  ¿Desea visualizar el LAYOUT       |    CORE guardadas en MiSTer o
+  y la LISTA DE JOGOS antes de      |____    solo actualizar las
+   cargar el SLOT?                       |  configuraciones de un
+          |                              |    SLOT ya existente?
+          | Sí                           |         |
+          |------- Seleccione [VIEW]     |         |
+          |         LAYOUT o GAMES_______|         |
+      No  |                                        |
+          |                                        |
+    Seleccione un SLOT               ______________|________
+     con el menú LOAD.               |                      |
+          |                    Crear Nuevo SLOT      Actualizar SLOT
+          |                          |                      |
+    ¡Configuración cargada!          |                      |
+    Salga de GCM y disfrute.    Use la función SAVE   Use la función
+                                  para crear un       OVERWRITE para
+                                   nuevo SLOT.       sobrescribir la
+                                     |              configuración de
+                  Use EDIT LAYOUT y EDIT GAMES    un SLOT existente.
+                para crear información visual    Las configuraciones
+                que facilite la identificación    LAYOUT y GAMES se
+                del SLOT creado.                   conservan.
+
+--- FIN ---

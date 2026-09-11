@@ -1,0 +1,20 @@
+
+ Esta é uma função de manutenção avançada que pode apagar
+definições de joystick ou remapeamentos de botões/teclas
+para um CORE escolhido.
+
+ O tipo de arquivo .map selecionado para o CORE escolhido
+será apagado da pasta 'config/inputs' do MiSTer e dos
+SLOTS salvos para todos os GAMEPADS cadastrados no GCM.
+
+ Os SLOTS que possuírem apenas o tipo de configuração
+selecionado também serão excluídos. Os SLOTS restantes
+serão reorganizados automaticamente.
+
+ ATENÇÃO: as configurações de LAYOUTS e GAMES dos SLOTS
+eliminados não poderão ser recuperadas.
+
+ O CORE permanecerá na lista mesmo que todos os seus
+SLOTS sejam eliminados. Após o processo de limpeza
+você poderá recriar, alterar ou salvar novos SLOTS
+para os GAMEPADS e CORES.
